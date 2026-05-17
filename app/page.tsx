@@ -111,6 +111,7 @@ export default function App() {
     setChecked({});
     setCompletedSessions([]);
     setCustomExercises({});
+    setStreak({ count: 0, lastDate: '' });
   };
 
   if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded) {

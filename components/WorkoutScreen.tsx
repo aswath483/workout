@@ -80,7 +80,7 @@ export default function WorkoutScreen({
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-white font-bold text-xl leading-tight">
-              Session {nextSession.sessionNum} <span className="text-[#888] font-normal text-sm">of 18</span>
+              Session {nextSession.sessionNum} <span className="text-[#888] font-normal text-sm">of 72</span>
             </h2>
             <p className={`text-sm font-semibold mt-0.5 ${PHASE_COLORS[nextSession.phase].text}`}>
               Phase {nextSession.phase} · {PHASE_COLORS[nextSession.phase].label}
@@ -103,64 +103,80 @@ export default function WorkoutScreen({
         {/* Progress bar */}
         <div className="mt-4">
           <div className="flex justify-between text-[11px] text-[#888] mb-1.5">
-            <span>{completedSessions.length} / 18 sessions done</span>
-            <span>{Math.round((completedSessions.length / 18) * 100)}%</span>
+            <span>{completedSessions.length} / 72 sessions done</span>
+            <span>{Math.round((completedSessions.length / 72) * 100)}%</span>
           </div>
           <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${(completedSessions.length / 18) * 100}%`, background: PHASE_COLORS[nextSession.phase].dot }}
+              style={{ width: `${(completedSessions.length / 72) * 100}%`, background: PHASE_COLORS[nextSession.phase].dot }}
             />
           </div>
         </div>
       </div>
 
-      {/* Phase groups */}
+      {/* Phase → Week groups */}
       {([1, 2, 3] as const).map(ph => {
         const c = PHASE_COLORS[ph];
         const phaseSessions = SESSIONS.filter(s => s.phase === ph);
         const donePh = phaseSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
         return (
           <div key={ph} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            {/* Phase header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a2a]">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: c.dot }} />
                 <span className="text-white font-bold text-sm">Phase {ph} · {c.label}</span>
+                <span className="text-[#666] text-xs">
+                  Weeks {(ph-1)*4+1}–{ph*4}
+                </span>
               </div>
-              <span className="text-[#888] text-xs">{donePh}/6 done</span>
+              <span className="text-[#888] text-xs">{donePh}/24 done</span>
             </div>
-            {phaseSessions.map(s => {
-              const isDone = completedSessions.includes(s.sessionNum);
-              const isNext = s.sessionNum === nextSession.sessionNum;
+
+            {/* Week sub-groups */}
+            {[1, 2, 3, 4].map(wip => {
+              const weekSessions = SESSIONS.filter(s => s.phase === ph && s.weekInPhase === wip);
+              const programWeek = (ph - 1) * 4 + wip;
+              const doneWk = weekSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
               return (
-                <button
-                  key={s.sessionNum}
-                  onClick={() => setActiveSession(s.sessionNum)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-[#1e1e1e] last:border-0 text-left transition-colors active:bg-[#222] ${
-                    isNext ? 'bg-[#1e1e1e]' : ''
-                  }`}
-                >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                    isDone ? 'bg-[#14532d] text-[#4ade80]' :
-                    isNext ? `${c.badge} ring-2 ring-offset-1 ring-offset-[#1a1a1a]` :
-                    'bg-[#2a2a2a] text-[#666]'
-                  }`}>
-                    {isDone ? '✓' : s.sessionNum}
+                <div key={wip} className="border-b border-[#1a1a1a] last:border-0">
+                  {/* Week header */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#141414]">
+                    <span className={`text-xs font-semibold ${c.text}`}>Week {programWeek}</span>
+                    <span className="text-[#555] text-xs">{doneWk}/6</span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${isDone ? 'text-[#888]' : isNext ? 'text-white' : 'text-[#ccc]'}`}>
-                      {TYPE_ICON[s.type]} {s.label}
-                    </p>
-                  </div>
-                  {isNext && (
-                    <span className={`text-[11px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${c.badge}`}>Next</span>
-                  )}
-                  {!isDone && !isNext && (
-                    <svg className="w-4 h-4 text-[#555] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  )}
-                </button>
+                  {/* Sessions in this week */}
+                  {weekSessions.map(s => {
+                    const isDone = completedSessions.includes(s.sessionNum);
+                    const isNext = s.sessionNum === nextSession.sessionNum;
+                    return (
+                      <button
+                        key={s.sessionNum}
+                        onClick={() => setActiveSession(s.sessionNum)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 border-b border-[#1a1a1a] last:border-0 text-left transition-colors active:bg-[#222] ${
+                          isNext ? 'bg-[#1e1e1e]' : ''
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 ${
+                          isDone ? 'bg-[#14532d] text-[#4ade80]' :
+                          isNext ? c.badge :
+                          'bg-[#222] text-[#555]'
+                        }`}>
+                          {isDone ? '✓' : s.sessionNum}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${isDone ? 'text-[#555]' : isNext ? 'text-white font-semibold' : 'text-[#aaa]'}`}>
+                            {TYPE_ICON[s.type]} {s.label}
+                          </p>
+                        </div>
+                        {isNext && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${c.badge}`}>Next</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               );
             })}
           </div>
@@ -277,7 +293,7 @@ function SessionDetail({
             Sessions
           </button>
           <span className="text-[#444]">/</span>
-          <span className="text-white text-sm font-semibold">Session {sessionNum} of 18</span>
+          <span className="text-white text-sm font-semibold">Session {sessionNum} of 72</span>
         </div>
 
         <div className="px-4 py-4 space-y-4">

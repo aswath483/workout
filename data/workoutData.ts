@@ -53,33 +53,42 @@ export const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 export type Day = typeof DAYS[number];
 
 export interface SessionInfo {
-  sessionNum: number;
+  sessionNum: number;   // 1–72
   phase: 1 | 2 | 3;
   day: Day;
   label: string;
   type: 'strength' | 'cardio' | 'hiit';
+  programWeek: number;  // 1–12 (overall week in the 12-week plan)
+  weekInPhase: number;  // 1–4 (week within this phase)
 }
 
-export const SESSIONS: SessionInfo[] = [
-  { sessionNum: 1,  phase: 1, day: 'Mon', label: 'Strength A · Push + Legs', type: 'strength' },
-  { sessionNum: 2,  phase: 1, day: 'Tue', label: 'Cardio',                   type: 'cardio'   },
-  { sessionNum: 3,  phase: 1, day: 'Wed', label: 'Strength B · Pull',         type: 'strength' },
-  { sessionNum: 4,  phase: 1, day: 'Thu', label: 'HIIT',                      type: 'hiit'     },
-  { sessionNum: 5,  phase: 1, day: 'Fri', label: 'Strength C · Full Body',    type: 'strength' },
-  { sessionNum: 6,  phase: 1, day: 'Sat', label: 'Cardio',                    type: 'cardio'   },
-  { sessionNum: 7,  phase: 2, day: 'Mon', label: 'Strength A · Push + Legs', type: 'strength' },
-  { sessionNum: 8,  phase: 2, day: 'Tue', label: 'Cardio',                   type: 'cardio'   },
-  { sessionNum: 9,  phase: 2, day: 'Wed', label: 'Strength B · Pull',         type: 'strength' },
-  { sessionNum: 10, phase: 2, day: 'Thu', label: 'HIIT',                      type: 'hiit'     },
-  { sessionNum: 11, phase: 2, day: 'Fri', label: 'Strength C · Full Body',    type: 'strength' },
-  { sessionNum: 12, phase: 2, day: 'Sat', label: 'Cardio',                    type: 'cardio'   },
-  { sessionNum: 13, phase: 3, day: 'Mon', label: 'Strength A · Push + Legs', type: 'strength' },
-  { sessionNum: 14, phase: 3, day: 'Tue', label: 'Cardio',                   type: 'cardio'   },
-  { sessionNum: 15, phase: 3, day: 'Wed', label: 'Strength B · Pull',         type: 'strength' },
-  { sessionNum: 16, phase: 3, day: 'Thu', label: 'HIIT',                      type: 'hiit'     },
-  { sessionNum: 17, phase: 3, day: 'Fri', label: 'Strength C · Full Body',    type: 'strength' },
-  { sessionNum: 18, phase: 3, day: 'Sat', label: 'Cardio',                    type: 'cardio'   },
-];
+const DAY_TYPES: Record<Day, 'strength' | 'cardio' | 'hiit'> = {
+  Mon: 'strength', Tue: 'cardio', Wed: 'strength',
+  Thu: 'hiit',     Fri: 'strength', Sat: 'cardio',
+};
+
+function buildSessions(): SessionInfo[] {
+  const out: SessionInfo[] = [];
+  let n = 1;
+  for (let ph = 1; ph <= 3; ph++) {
+    for (let wip = 1; wip <= 4; wip++) {
+      for (const d of DAYS) {
+        out.push({
+          sessionNum: n++,
+          phase: ph as 1 | 2 | 3,
+          day: d,
+          label: DAY_LABELS[d],
+          type: DAY_TYPES[d],
+          programWeek: (ph - 1) * 4 + wip,
+          weekInPhase: wip,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+export const SESSIONS = buildSessions();
 
 export const EXERCISE_LIBRARY: ExerciseInfo[] = [
   // ── PUSH ─────────────────────────────────────────────────────────────────

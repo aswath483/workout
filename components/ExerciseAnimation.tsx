@@ -351,30 +351,28 @@ function DeadliftAnim({ accent }: { accent:string }) {
 function OverheadPressAnim({ accent }: { accent:string }) {
   return (
     <svg viewBox="0 0 220 290" className="w-full h-full">
-      <MG cx={110} cy={68} rx={90} ry={70} accent={accent} />
-      {/* Bar: starts at shoulder (y=132) → pressed fully overhead (y=8) */}
-      <Barbell cx={110} cy={132} tcy={8} barW={154} plateR={18} />
-      {/* Head sits at cy=50 — gives clear space above for overhead bar */}
-      <H cx={110} cy={50} />
-      <L x1={110} y1={67} x2={110} y2={80} sw={SW.neck} />
-      <L x1={110} y1={80} x2={110} y2={162} sw={SW.torso} />
-      <L x1={72} y1={84} x2={148} y2={84} sw={SW.hint} op={0.22} />
-      {/* Left arm: elbows flared at chin → arms straight overhead */}
-      <J cx={72} cy={84} r={6} />
-      <L x1={72} y1={84} x2={44} y2={108} tx2={60} ty2={48} sw={SW.uArm} />
-      <J cx={44} cy={108} tcx={60} tcy={48} r={5} />
-      <L x1={44} y1={108} x2={38} y2={132} tx1={60} ty1={48} tx2={52} ty2={8} sw={SW.fArm} />
-      {/* Right arm */}
-      <J cx={148} cy={84} r={6} />
-      <L x1={148} y1={84} x2={176} y2={108} tx2={160} ty2={48} sw={SW.uArm} />
-      <J cx={176} cy={108} tcx={160} tcy={48} r={5} />
-      <L x1={176} y1={108} x2={182} y2={132} tx1={160} ty1={48} tx2={168} ty2={8} sw={SW.fArm} />
+      <MG cx={110} cy={72} rx={82} ry={60} accent={accent} />
+      {/* Bar from chin → overhead */}
+      <Barbell cx={110} cy={118} tcy={46} barW={150} plateR={18} />
+      <H cx={110} cy={26} />
+      <L x1={110} y1={43} x2={110} y2={57} sw={SW.neck} />
+      <L x1={110} y1={57} x2={110} y2={162} sw={SW.torso} />
+      <L x1={72} y1={64} x2={148} y2={64} sw={SW.hint} op={0.22} />
+      {/* Arms raise with bar */}
+      <J cx={72} cy={64} r={6} />
+      <L x1={72} y1={64} x2={50} y2={104} tx2={60} ty2={52} sw={SW.uArm} />
+      <J cx={50} cy={104} tcx={60} tcy={52} r={5} />
+      <L x1={50} y1={104} x2={42} y2={118} tx1={60} ty1={52} tx2={42} ty2={46} sw={SW.fArm} />
+      <J cx={148} cy={64} r={6} />
+      <L x1={148} y1={64} x2={170} y2={104} tx2={160} ty2={52} sw={SW.uArm} />
+      <J cx={170} cy={104} tcx={160} tcy={52} r={5} />
+      <L x1={170} y1={104} x2={178} y2={118} tx1={160} ty1={52} tx2={178} ty2={46} sw={SW.fArm} />
       <L x1={80} y1={162} x2={140} y2={162} sw={SW.hint} op={0.22} />
       <StatLegs />
       <Floor y={277} />
-      <AU cx={20} y={52} accent={accent} />
-      <AU cx={200} y={52} accent={accent} />
-      <PL a="↓  LOWER TO SHOULDER" b="↑  PRESS OVERHEAD" accent={accent} />
+      <AU cx={20} y={58} accent={accent} />
+      <AU cx={200} y={58} accent={accent} />
+      <PL a="↓  LOWER TO CHIN" b="↑  PRESS OVERHEAD" accent={accent} />
     </svg>
   );
 }

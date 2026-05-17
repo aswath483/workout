@@ -7,12 +7,13 @@ interface Props {
 }
 
 const PHASE_META = [
-  { fill: '#4ade80', bg: '#14532d33', border: '#14532d', label: 'Phase 1 — Foundation',  range: [1, 6]  as [number,number] },
-  { fill: '#facc15', bg: '#713f1233', border: '#713f12', label: 'Phase 2 — Growth',       range: [7, 12] as [number,number] },
-  { fill: '#f87171', bg: '#7f1d1d33', border: '#7f1d1d', label: 'Phase 3 — Aesthetic',    range: [13,18] as [number,number] },
+  { fill: '#4ade80', bg: '#14532d33', label: 'Phase 1 — Foundation',  phase: 1 as const },
+  { fill: '#facc15', bg: '#713f1233', label: 'Phase 2 — Growth',       phase: 2 as const },
+  { fill: '#f87171', bg: '#7f1d1d33', label: 'Phase 3 — Aesthetic',    phase: 3 as const },
 ];
 
 const TYPE_ICON: Record<string, string> = { strength: '💪', cardio: '🏃', hiit: '⚡' };
+const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function ProgressScreen({ completedSessions, onReset }: Props) {
   const total = completedSessions.length;
@@ -20,95 +21,111 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
 
   return (
     <div className="px-4 py-4 space-y-4">
-      {/* Overall progress */}
+      {/* Overall ring */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-white font-bold text-lg">{total}/18 Sessions Done</p>
+            <p className="text-white font-bold text-lg">{total}/72 Sessions Done</p>
             <p className="text-[#888] text-xs mt-0.5">
-              {total === 18
+              {total === 72
                 ? '12-Week Transformation Complete!'
                 : nextSession
-                  ? `Next up: Session ${nextSession.sessionNum} · ${nextSession.label}`
-                  : 'All sessions complete!'}
+                  ? `Next: Session ${nextSession.sessionNum} · Week ${nextSession.programWeek} · ${nextSession.label}`
+                  : 'All done!'}
             </p>
           </div>
           <div className="relative w-14 h-14">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 56 56">
               <circle cx="28" cy="28" r="22" fill="none" stroke="#2a2a2a" strokeWidth="6" />
               <circle cx="28" cy="28" r="22" fill="none" stroke="#4ade80" strokeWidth="6"
-                strokeDasharray={`${(total / 18) * 138.2} 138.2`} strokeLinecap="round" />
+                strokeDasharray={`${(total / 72) * 138.2} 138.2`} strokeLinecap="round" />
             </svg>
             <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">
-              {Math.round((total / 18) * 100)}%
+              {Math.round((total / 72) * 100)}%
             </span>
           </div>
         </div>
       </div>
 
-      {/* Session grid */}
+      {/* 12-week × 6-day grid */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-        <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Session Grid</p>
-        <div className="space-y-3">
-          {PHASE_META.map((ph, pi) => {
-            const phaseSessions = SESSIONS.filter(s => s.phase === (pi + 1) as 1|2|3);
-            const donePh = phaseSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
+        <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">12-Week Grid</p>
+
+        {/* Day column headers */}
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          <div /> {/* week label column */}
+          {DAY_SHORT.map(d => (
+            <div key={d} className="text-center text-[9px] text-[#555] font-semibold">{d}</div>
+          ))}
+        </div>
+
+        {/* Rows: one per program week */}
+        <div className="space-y-1">
+          {Array.from({ length: 12 }).map((_, wi) => {
+            const programWeek = wi + 1;
+            const ph = programWeek <= 4 ? 1 : programWeek <= 8 ? 2 : 3;
+            const fill = PHASE_META[ph - 1].fill;
+            const bg = PHASE_META[ph - 1].bg;
+            const weekSessions = SESSIONS.filter(s => s.programWeek === programWeek);
             return (
-              <div key={pi}>
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-xs font-bold" style={{ color: ph.fill }}>{ph.label}</p>
-                  <span className="text-[#888] text-xs">{donePh}/6</span>
-                </div>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {phaseSessions.map(s => {
-                    const isDone = completedSessions.includes(s.sessionNum);
-                    const isNext = s.sessionNum === nextSession?.sessionNum;
-                    return (
-                      <div key={s.sessionNum}
-                        className="rounded-xl p-2 text-center"
-                        style={{
-                          background: isDone ? ph.bg : isNext ? '#222' : '#111',
-                          border: `1px solid ${isDone ? ph.fill : isNext ? '#555' : '#2a2a2a'}`,
-                        }}>
-                        <span className="block text-[8px]" style={{ color: ph.fill }}>
-                          {TYPE_ICON[s.type]}
-                        </span>
-                        <span className="block text-sm font-bold mt-0.5"
-                          style={{ color: isDone ? ph.fill : isNext ? '#fff' : '#555' }}>
-                          {isDone ? '✓' : s.sessionNum}
-                        </span>
-                        {isNext && <span className="block text-[7px] text-[#60a5fa] mt-0.5">NEXT</span>}
-                      </div>
-                    );
-                  })}
-                </div>
+              <div key={programWeek} className="grid grid-cols-7 gap-1 items-center">
+                {/* Week label */}
+                <div className="text-[9px] font-bold pr-1" style={{ color: fill }}>W{programWeek}</div>
+                {weekSessions.map(s => {
+                  const isDone = completedSessions.includes(s.sessionNum);
+                  const isNext = s.sessionNum === nextSession?.sessionNum;
+                  return (
+                    <div key={s.sessionNum}
+                      className="rounded-lg py-1.5 flex flex-col items-center gap-0.5"
+                      style={{
+                        background: isDone ? bg : isNext ? '#222' : '#111',
+                        border: `1px solid ${isDone ? fill : isNext ? '#555' : '#1e1e1e'}`,
+                      }}>
+                      <span className="text-[8px] leading-none">{TYPE_ICON[s.type]}</span>
+                      <span className="text-[9px] font-bold leading-none"
+                        style={{ color: isDone ? fill : isNext ? '#fff' : '#444' }}>
+                        {isDone ? '✓' : isNext ? '→' : s.sessionNum}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             );
           })}
+        </div>
+
+        {/* Phase legend */}
+        <div className="flex gap-4 mt-3 pt-3 border-t border-[#2a2a2a]">
+          {PHASE_META.map(ph => (
+            <div key={ph.phase} className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full" style={{ background: ph.fill }} />
+              <span className="text-[10px] text-[#888]">P{ph.phase} Wk {(ph.phase-1)*4+1}–{ph.phase*4}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Phase progress bars */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4 space-y-4">
         <p className="text-xs text-[#888] uppercase tracking-widest font-semibold">Phase Progress</p>
-        {PHASE_META.map((ph, i) => {
-          const done = SESSIONS.filter(s => s.phase === (i+1) as 1|2|3 && completedSessions.includes(s.sessionNum)).length;
+        {PHASE_META.map(ph => {
+          const done = SESSIONS.filter(s => s.phase === ph.phase && completedSessions.includes(s.sessionNum)).length;
           return (
-            <div key={i}>
+            <div key={ph.phase}>
               <div className="flex justify-between items-center mb-1.5">
                 <p className="text-white text-sm font-semibold">{ph.label}</p>
-                <span className="text-white font-bold text-sm">{done}/6</span>
+                <span className="text-white font-bold text-sm">{done}/24</span>
               </div>
               <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(done / 6) * 100}%`, background: ph.fill }} />
+                  style={{ width: `${(done / 24) * 100}%`, background: ph.fill }} />
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Weight progression guide */}
+      {/* Weight progression rule */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
         <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Weight Progression Rule</p>
         <div className="space-y-2">
