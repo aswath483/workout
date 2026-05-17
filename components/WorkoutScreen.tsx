@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY,
-  type ExerciseInfo, type SessionInfo,
+  type ExerciseInfo,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
@@ -34,6 +34,31 @@ const TYPE_ICON: Record<string, string> = {
   cardio: '🏃',
   hiit: '⚡',
 };
+
+export const MOODS = [
+  { emoji: '😴', label: 'Easy',    value: 'easy' },
+  { emoji: '😊', label: 'Good',    value: 'good' },
+  { emoji: '😤', label: 'Hard',    value: 'hard' },
+  { emoji: '💀', label: 'Brutal',  value: 'brutal' },
+  { emoji: '🤒', label: 'Off Day', value: 'offday' },
+];
+
+export interface SessionNote {
+  mood: string;
+  note: string;
+  date: string;
+}
+
+function readNotes(): Record<number, SessionNote> {
+  if (typeof window === 'undefined') return {};
+  try { return JSON.parse(localStorage.getItem('wk_session_notes') || '{}'); } catch { return {}; }
+}
+
+function saveNote(sessionNum: number, entry: SessionNote) {
+  const all = readNotes();
+  all[sessionNum] = entry;
+  try { localStorage.setItem('wk_session_notes', JSON.stringify(all)); } catch {}
+}
 
 export default function WorkoutScreen({
   checked, onCheckedChange, restMultiplier, level,
@@ -75,7 +100,7 @@ export default function WorkoutScreen({
       {/* Next Session Hero */}
       <div className={`rounded-2xl border p-5 ${PHASE_COLORS[nextSession.phase].bg} ${PHASE_COLORS[nextSession.phase].border}`}>
         <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${PHASE_COLORS[nextSession.phase].text}`}>
-          {completedSessions.length === 18 ? 'All Done!' : 'Up Next'}
+          {completedSessions.length === 72 ? 'All Done!' : 'Up Next'}
         </p>
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -120,6 +145,7 @@ export default function WorkoutScreen({
         const c = PHASE_COLORS[ph];
         const phaseSessions = SESSIONS.filter(s => s.phase === ph);
         const donePh = phaseSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
+        const notes = readNotes();
         return (
           <div key={ph} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
             {/* Phase header */}
@@ -150,6 +176,8 @@ export default function WorkoutScreen({
                   {weekSessions.map(s => {
                     const isDone = completedSessions.includes(s.sessionNum);
                     const isNext = s.sessionNum === nextSession.sessionNum;
+                    const note = notes[s.sessionNum];
+                    const moodEmoji = note ? MOODS.find(m => m.value === note.mood)?.emoji : null;
                     return (
                       <button
                         key={s.sessionNum}
@@ -169,8 +197,12 @@ export default function WorkoutScreen({
                           <p className={`text-sm ${isDone ? 'text-[#555]' : isNext ? 'text-white font-semibold' : 'text-[#aaa]'}`}>
                             {TYPE_ICON[s.type]} {s.label}
                           </p>
+                          {note?.note && (
+                            <p className="text-[10px] text-[#555] mt-0.5 truncate">{note.note}</p>
+                          )}
                         </div>
-                        {isNext && (
+                        {moodEmoji && <span className="text-base flex-shrink-0">{moodEmoji}</span>}
+                        {isNext && !moodEmoji && (
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg flex-shrink-0 ${c.badge}`}>Next</span>
                         )}
                       </button>
@@ -215,6 +247,20 @@ function SessionDetail({
   const customs = customExercises[sessionKey] ?? [];
   const baseExercises = Array.isArray(dayData) ? dayData : [];
 
+  // Note / mood state
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [selectedMood, setSelectedMood] = useState('');
+  const [noteText, setNoteText] = useState('');
+  const [savedNote, setSavedNote] = useState<SessionNote | null>(() => readNotes()[sessionNum] ?? null);
+
+  const handleSaveNote = () => {
+    const entry: SessionNote = { mood: selectedMood, note: noteText.trim(), date: new Date().toISOString() };
+    saveNote(sessionNum, entry);
+    setSavedNote(entry);
+    setShowNoteModal(false);
+    onSessionComplete(sessionNum);
+  };
+
   // Library: filter out exercises already in this session
   const sessionExNames = new Set(baseExercises.map(e => e.name).concat(customs.map(e => e.name)));
   const libraryFiltered = EXERCISE_LIBRARY.filter(e =>
@@ -223,6 +269,64 @@ function SessionDetail({
 
   return (
     <>
+      {/* Note / mood modal */}
+      {showNoteModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border-t border-[#2a2a2a] rounded-t-3xl w-full max-w-lg p-6 pb-10">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <h3 className="text-white font-bold text-xl">Session {sessionNum} Done! 🎉</h3>
+                <p className="text-[#888] text-sm mt-0.5">How did it feel today?</p>
+              </div>
+              <button
+                onClick={() => { setShowNoteModal(false); onSessionComplete(sessionNum); }}
+                className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#888] flex-shrink-0 mt-0.5"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Mood picker */}
+            <div className="flex gap-2 mb-5">
+              {MOODS.map(m => (
+                <button
+                  key={m.value}
+                  onClick={() => setSelectedMood(m.value)}
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-all ${
+                    selectedMood === m.value
+                      ? 'border-white bg-white/10'
+                      : 'border-[#2a2a2a] bg-[#111]'
+                  }`}
+                >
+                  <span className="text-2xl">{m.emoji}</span>
+                  <span className="text-[9px] text-[#888] font-semibold">{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Note input */}
+            <textarea
+              value={noteText}
+              onChange={e => setNoteText(e.target.value)}
+              placeholder="Any notes for next time? (optional) — e.g. felt weak on squats, need more sleep"
+              className="w-full bg-[#111] border border-[#2a2a2a] rounded-xl p-3 text-white text-sm placeholder-[#444] resize-none focus:outline-none focus:border-[#444] mb-4"
+              rows={3}
+            />
+
+            <button
+              onClick={handleSaveNote}
+              className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all ${
+                selectedMood
+                  ? 'bg-white text-black'
+                  : 'bg-[#2a2a2a] text-[#555]'
+              }`}
+            >
+              {selectedMood ? 'Save & Complete Session' : 'Select a mood above'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Library overlay */}
       {showLibrary && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm"
@@ -317,7 +421,7 @@ function SessionDetail({
                 </span>
               ) : (
                 <button
-                  onClick={() => onSessionComplete(sessionNum)}
+                  onClick={() => setShowNoteModal(true)}
                   className="flex-shrink-0 bg-white text-black text-[11px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
                 >
                   Mark Complete
@@ -325,6 +429,24 @@ function SessionDetail({
               )}
             </div>
           </div>
+
+          {/* Saved note for completed session */}
+          {isDone && savedNote && (
+            <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xl">{MOODS.find(m => m.value === savedNote.mood)?.emoji ?? '✓'}</span>
+                <span className="text-white text-sm font-semibold">
+                  {MOODS.find(m => m.value === savedNote.mood)?.label}
+                </span>
+                <span className="text-[#555] text-xs ml-auto">
+                  {new Date(savedNote.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+              {savedNote.note && (
+                <p className="text-[#aaa] text-sm leading-relaxed">{savedNote.note}</p>
+              )}
+            </div>
+          )}
 
           {/* Strength session */}
           {session.type === 'strength' && (

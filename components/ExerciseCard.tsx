@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import type { ExerciseInfo } from '@/data/workoutData';
+import { EQUIPMENT_BY_EXERCISE, EZ_BAR_ALTERNATIVE } from '@/data/workoutData';
 import type { Level } from '@/app/page';
 import RestTimer from './RestTimer';
 import ExerciseAnimation, { EXERCISE_ANIMATION } from './ExerciseAnimation';
@@ -148,6 +149,17 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
                   </span>
                 ))}
               </div>
+
+              {EQUIPMENT_BY_EXERCISE[exercise.name] && (
+                <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
+                  <span className="text-[10px] text-[#555] uppercase tracking-wide">Kit:</span>
+                  {EQUIPMENT_BY_EXERCISE[exercise.name].map((item) => (
+                    <span key={item} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[#1e1e1e] text-[#777] border border-[#2e2e2e]">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-center gap-1">
@@ -207,6 +219,19 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
               </div>
             )}
 
+            {EQUIPMENT_BY_EXERCISE[exercise.name] && (
+              <div>
+                <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-2">Equipment from your kit</p>
+                <div className="flex gap-2 flex-wrap">
+                  {EQUIPMENT_BY_EXERCISE[exercise.name].map((item) => (
+                    <span key={item} className="text-[12px] font-semibold px-3 py-1 rounded-lg bg-[#1e2a1e] text-[#6ee7b7] border border-[#2a3d2a]">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3">How to do it</p>
               <ol className="space-y-2">
@@ -225,6 +250,13 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
               <div className="bg-[#713f12]/30 border border-[#713f12] rounded-xl p-3">
                 <p className="text-[11px] text-[#facc15] font-bold uppercase tracking-widest mb-1">Tip</p>
                 <p className="text-[13px] text-[#fcd34d] leading-relaxed">{exercise.tip}</p>
+              </div>
+            )}
+
+            {EZ_BAR_ALTERNATIVE[exercise.name] && (
+              <div className="bg-[#0c2233]/60 border border-[#164e63] rounded-xl p-3">
+                <p className="text-[11px] text-[#38bdf8] font-bold uppercase tracking-widest mb-1">EZ/Curl Bar Option</p>
+                <p className="text-[13px] text-[#7dd3fc] leading-relaxed">{EZ_BAR_ALTERNATIVE[exercise.name]}</p>
               </div>
             )}
 

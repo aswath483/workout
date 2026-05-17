@@ -1,5 +1,7 @@
 'use client';
+import { useState } from 'react';
 import { SESSIONS } from '@/data/workoutData';
+import { MOODS, type SessionNote } from './WorkoutScreen';
 import BodyWeightTracker from './BodyWeightTracker';
 
 interface Props {
@@ -14,11 +16,39 @@ const PHASE_META = [
 ];
 
 const TYPE_ICON: Record<string, string> = { strength: '💪', cardio: '🏃', hiit: '⚡' };
+const TYPE_COLOR: Record<string, string> = {
+  strength: 'text-[#60a5fa]',
+  cardio:   'text-[#4ade80]',
+  hiit:     'text-[#facc15]',
+};
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function ProgressScreen({ completedSessions, onReset }: Props) {
   const total = completedSessions.length;
   const nextSession = SESSIONS.find(s => !completedSessions.includes(s.sessionNum));
+
+  const [sessionNotes] = useState<Record<number, SessionNote>>(() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('wk_session_notes') || '{}'); } catch { return {}; }
+  });
+
+  // Breakdown by type
+  const completedInfo = completedSessions.map(n => SESSIONS.find(s => s.sessionNum === n)).filter(Boolean) as typeof SESSIONS;
+  const strengthDone = completedInfo.filter(s => s.type === 'strength').length;
+  const cardioDone   = completedInfo.filter(s => s.type === 'cardio').length;
+  const hiitDone     = completedInfo.filter(s => s.type === 'hiit').length;
+
+  // Sessions with notes, newest first
+  const logEntries = completedSessions
+    .map(n => ({ session: SESSIONS.find(s => s.sessionNum === n)!, note: sessionNotes[n] ?? null }))
+    .filter(x => x.session)
+    .sort((a, b) => b.session.sessionNum - a.session.sessionNum);
+
+  // Mood distribution
+  const moodCounts = MOODS.map(m => ({
+    ...m,
+    count: Object.values(sessionNotes).filter(n => n.mood === m.value).length,
+  })).filter(m => m.count > 0);
 
   return (
     <div className="px-4 py-4 space-y-4">
@@ -51,6 +81,45 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
         </div>
       </div>
 
+      {/* Workout type breakdown */}
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+        <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Sessions by Type</p>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Strength', icon: '💪', done: strengthDone, total: 24, color: '#60a5fa' },
+            { label: 'Cardio',   icon: '🏃', done: cardioDone,   total: 24, color: '#4ade80' },
+            { label: 'HIIT',     icon: '⚡', done: hiitDone,     total: 24, color: '#facc15' },
+          ].map(t => (
+            <div key={t.label} className="bg-[#0f0f0f] rounded-xl p-3 text-center">
+              <p className="text-xl mb-1">{t.icon}</p>
+              <p className="text-white font-bold text-base">{t.done}<span className="text-[#555] font-normal text-xs">/{t.total}</span></p>
+              <p className="text-[10px] text-[#888] mt-0.5">{t.label}</p>
+              <div className="h-1 bg-[#2a2a2a] rounded-full mt-2 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${(t.done / t.total) * 100}%`, background: t.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mood summary — only shown if any notes exist */}
+      {moodCounts.length > 0 && (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+          <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">How Sessions Felt</p>
+          <div className="flex gap-2 flex-wrap">
+            {moodCounts.map(m => (
+              <div key={m.value} className="flex items-center gap-2 bg-[#0f0f0f] border border-[#2a2a2a] rounded-xl px-3 py-2">
+                <span className="text-xl">{m.emoji}</span>
+                <div>
+                  <p className="text-white font-bold text-sm leading-none">{m.count}</p>
+                  <p className="text-[10px] text-[#888] mt-0.5">{m.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 12-week × 6-day grid */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
         <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">12-Week Grid</p>
@@ -73,11 +142,12 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
             const weekSessions = SESSIONS.filter(s => s.programWeek === programWeek);
             return (
               <div key={programWeek} className="grid grid-cols-7 gap-1 items-center">
-                {/* Week label */}
                 <div className="text-[9px] font-bold pr-1" style={{ color: fill }}>W{programWeek}</div>
                 {weekSessions.map(s => {
                   const isDone = completedSessions.includes(s.sessionNum);
                   const isNext = s.sessionNum === nextSession?.sessionNum;
+                  const note = sessionNotes[s.sessionNum];
+                  const moodEmoji = note ? MOODS.find(m => m.value === note.mood)?.emoji : null;
                   return (
                     <div key={s.sessionNum}
                       className="rounded-lg py-1.5 flex flex-col items-center gap-0.5"
@@ -85,7 +155,11 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
                         background: isDone ? bg : isNext ? '#222' : '#111',
                         border: `1px solid ${isDone ? fill : isNext ? '#555' : '#1e1e1e'}`,
                       }}>
-                      <span className="text-[8px] leading-none">{TYPE_ICON[s.type]}</span>
+                      {moodEmoji ? (
+                        <span className="text-[10px] leading-none">{moodEmoji}</span>
+                      ) : (
+                        <span className="text-[8px] leading-none">{TYPE_ICON[s.type]}</span>
+                      )}
                       <span className="text-[9px] font-bold leading-none"
                         style={{ color: isDone ? fill : isNext ? '#fff' : '#444' }}>
                         {isDone ? '✓' : isNext ? '→' : s.sessionNum}
@@ -128,6 +202,52 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
           );
         })}
       </div>
+
+      {/* Session log */}
+      {logEntries.length > 0 && (
+        <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+          <p className="text-xs text-[#888] uppercase tracking-widest font-semibold px-4 pt-4 pb-3">Session Log</p>
+          <div className="divide-y divide-[#1e1e1e]">
+            {logEntries.map(({ session: s, note }) => {
+              const phFill = PHASE_META[s.phase - 1].fill;
+              const moodData = note ? MOODS.find(m => m.value === note.mood) : null;
+              return (
+                <div key={s.sessionNum} className="px-4 py-3 flex items-start gap-3">
+                  {/* Session number badge */}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 mt-0.5"
+                    style={{ background: PHASE_META[s.phase - 1].bg, border: `1.5px solid ${phFill}`, color: phFill }}>
+                    {s.sessionNum}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-sm font-semibold ${TYPE_COLOR[s.type]}`}>
+                        {TYPE_ICON[s.type]} {s.label}
+                      </span>
+                      <span className="text-[10px] text-[#555]">Wk {s.programWeek}</span>
+                    </div>
+                    {note?.note && (
+                      <p className="text-[#888] text-xs mt-1 leading-relaxed">{note.note}</p>
+                    )}
+                    {note?.date && (
+                      <p className="text-[10px] text-[#444] mt-0.5">
+                        {new Date(note.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+
+                  {moodData && (
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <span className="text-xl">{moodData.emoji}</span>
+                      <span className="text-[9px] text-[#555] mt-0.5">{moodData.label}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Weight progression rule */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">

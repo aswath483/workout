@@ -90,6 +90,79 @@ function buildSessions(): SessionInfo[] {
 
 export const SESSIONS = buildSessions();
 
+export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
+  // Straight bar exercises
+  'Barbell Squat':          ['Straight bar', 'Weight plates', 'Gloves'],
+  'Bent Over Row':          ['Straight bar', 'Weight plates', 'Gloves'],
+  'Barbell Row':            ['Straight bar', 'Weight plates', 'Gloves'],
+  'Romanian Deadlift':      ['Straight bar', 'Weight plates', 'Gloves'],
+  'Deadlift':               ['Straight bar', 'Weight plates', 'Gloves'],
+  'Push Press':             ['Straight bar', 'Weight plates', 'Gloves'],
+  // EZ bar or dumbbells
+  'Bicep Curl':             ['EZ/curl bar', 'Dumbbells', 'Weight plates'],
+  // Dumbbell exercises
+  'Shoulder Press':         ['Dumbbells', 'Weight plates'],
+  'Incline Dumbbell Press': ['Dumbbells', 'Weight plates'],
+  'Lateral Raise':          ['Dumbbells', 'Weight plates'],
+  'Triceps Extension':      ['Dumbbells', 'Weight plates'],
+  'Arnold Press':           ['Dumbbells', 'Weight plates'],
+  'Floor Press':            ['Dumbbells', 'Weight plates'],
+  'Hammer Curl':            ['Dumbbells', 'Weight plates'],
+  'Rear Delt Fly':          ['Dumbbells', 'Weight plates'],
+  'Shrugs':                 ['Dumbbells', 'Weight plates'],
+  'Walking Lunge':          ['Dumbbells', 'Weight plates'],
+  'Lunges':                 ['Dumbbells', 'Weight plates'],
+  'Goblet Squat':           ['Dumbbells', 'Weight plates'],
+  'Farmer Walk':            ['Dumbbells', 'Weight plates', 'Gloves'],
+  'Bulgarian Split Squat':  ['Dumbbells', 'Weight plates'],
+  // Weight plate only
+  'Russian Twist':          ['Weight plate'],
+  // Bodyweight
+  'Pushup':                 ['Bodyweight'],
+  'Pushup Finisher':        ['Bodyweight'],
+  'Plank':                  ['Bodyweight'],
+  'Side Plank':             ['Bodyweight'],
+  'Dead Bug':               ['Bodyweight'],
+  'Leg Raises':             ['Bodyweight'],
+  'Calf Raise':             ['Bodyweight'],
+  'Box Jump':               ['Bodyweight'],
+  'Dips':                   ['Bodyweight'],
+  'Pull-Ups':               ['Bodyweight', 'Resistance band (assisted)'],
+  'Burpees':                ['Bodyweight'],
+  'Burpees Finisher':       ['Bodyweight'],
+  'Mountain Climbers':      ['Bodyweight'],
+  // Skipping rope (HIIT cardio)
+  'Sprints':                ['Skipping rope'],
+  // Resistance / thera band
+  'Face Pull':              ['Resistance band'],
+  'Hip Thrust':             ['Straight bar', 'Weight plates', 'Resistance band (around knees)'],
+};
+
+export const EZ_BAR_ALTERNATIVE: Record<string, string> = {
+  'Bicep Curl':
+    'EZ/curl bar works here — angled grip is easier on wrists. Load all your plates onto one bar as you get stronger.',
+  'Triceps Extension':
+    'EZ bar Skull Crushers: lie flat, hold bar above chest, lower toward your forehead by bending elbows only, press back up. Better tricep stretch than overhead version.',
+  'Shrugs':
+    'EZ bar works — load heavier plates than your dumbbells allow. Same straight-up movement, more comfortable grip.',
+  'Bent Over Row':
+    'EZ bar rows work fine — angled grip is easier on wrists than straight bar. Same hip-hinge form, pull to belly button.',
+  'Shoulder Press':
+    'EZ bar overhead press works — grip the inner angled section, press straight up. Wrist angle is more comfortable than a straight bar.',
+  'Floor Press':
+    'EZ bar floor press works — lie on floor, bar at chest level, press straight up. Load it the same as dumbbells combined.',
+  'Incline Dumbbell Press':
+    'EZ bar incline press works if you have an inclined surface. Grip the angled section at chest, press up and slightly inward.',
+  'Walking Lunge':
+    'Rest EZ bar across your upper back (like a mini squat bar) instead of dumbbells at sides. Frees your hands and lets you load more weight.',
+  'Lunges':
+    'Rest EZ bar across your upper back instead of holding dumbbells — same lunge movement, bar replaces both dumbbells.',
+  'Goblet Squat':
+    'Hold the EZ bar horizontally at chest height with both hands — works exactly like a dumbbell goblet squat.',
+  'Bulgarian Split Squat':
+    'Rest EZ bar across your upper back like a squat bar. Frees your hands which helps with balance on this tricky exercise.',
+};
+
 export const EXERCISE_LIBRARY: ExerciseInfo[] = [
   // ── PUSH ─────────────────────────────────────────────────────────────────
   { name: 'Pushup', weight: 'Bodyweight', sets: 3, reps: '10–15', restSeconds: 60,
