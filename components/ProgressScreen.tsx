@@ -1,5 +1,6 @@
 'use client';
 import { SESSIONS } from '@/data/workoutData';
+import BodyWeightTracker from './BodyWeightTracker';
 
 interface Props {
   completedSessions: number[];
@@ -21,6 +22,9 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
 
   return (
     <div className="px-4 py-4 space-y-4">
+      {/* Body Weight Tracker */}
+      <BodyWeightTracker />
+
       {/* Overall ring */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
         <div className="flex items-center justify-between mb-3">
