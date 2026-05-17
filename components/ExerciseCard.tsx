@@ -9,12 +9,13 @@ import WeightLogger from './WeightLogger';
 interface Props {
   exercise: ExerciseInfo;
   phase: 1 | 2 | 3;
-  dayKey: string;
+  sessionKey: string;
   exerciseIndex: number;
   checked: Record<string, boolean>;
   onCheckedChange: (key: string, value: boolean) => void;
   restMultiplier: number;
   level: Level;
+  onRemove?: () => void;
 }
 
 const MUSCLE_COLORS: Record<string, string> = {
@@ -31,14 +32,14 @@ const PHASE_COLORS = {
   3: { badge: 'bg-[#7f1d1d] text-[#f87171]', ring: '#f87171', label: 'P3' },
 };
 
-export default function ExerciseCard({ exercise, phase, dayKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level }: Props) {
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, onRemove }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
 
   const phaseColor = PHASE_COLORS[phase];
   const muscleColor = MUSCLE_COLORS[exercise.muscleGroup];
-  const allSetsKey = `p${phase}-${dayKey}-${exerciseIndex}`;
+  const allSetsKey = `${sessionKey}-${exerciseIndex}`;
   const allDone = setsDone.every(Boolean);
   const effectiveRest = Math.round(exercise.restSeconds * restMultiplier);
 
@@ -102,6 +103,14 @@ export default function ExerciseCard({ exercise, phase, dayKey, exerciseIndex, c
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${phaseColor.badge}`}>
                   {phaseColor.label}
                 </span>
+                {onRemove && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                    className="ml-auto text-[#666] hover:text-[#f87171] text-xs px-2 py-0.5 rounded-lg border border-[#2a2a2a] transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-3 mt-2 flex-wrap">

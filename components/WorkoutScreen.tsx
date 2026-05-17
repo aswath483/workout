@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { PHASES, DAYS, DAY_LABELS, type Day } from '@/data/workoutData';
+import {
+  SESSIONS, PHASES, EXERCISE_LIBRARY,
+  type ExerciseInfo, type SessionInfo,
+} from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
-
 import type { Level, StreakData } from '@/app/page';
 
 interface Props {
@@ -11,188 +13,421 @@ interface Props {
   onCheckedChange: (key: string, value: boolean) => void;
   restMultiplier: number;
   level: Level;
-  completedDays: string[];
-  onDayComplete: (dayKey: string) => void;
+  completedSessions: number[];
+  onSessionComplete: (n: number) => void;
+  customExercises: Record<string, ExerciseInfo[]>;
+  onAddCustomExercise: (sessionNum: number, ex: ExerciseInfo) => void;
+  onRemoveCustomExercise: (sessionNum: number, exName: string) => void;
   streak: StreakData;
 }
 
-export default function WorkoutScreen({ checked, onCheckedChange, restMultiplier, level, completedDays, onDayComplete, streak }: Props) {
-  const todayMap: Record<string, Day> = {
-    Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
-    Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat',
-  };
-  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const todayDay = todayMap[todayName] as Day | undefined;
+type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
 
-  const [phase, setPhase] = useState<1 | 2 | 3>(1);
-  const [day, setDay] = useState<Day>(todayDay && DAYS.includes(todayDay) ? todayDay : 'Mon');
+const PHASE_COLORS = {
+  1: { bg: 'bg-[#14532d]/20', border: 'border-[#14532d]', text: 'text-[#4ade80]', dot: '#4ade80', badge: 'bg-[#14532d] text-[#4ade80]', label: 'Foundation' },
+  2: { bg: 'bg-[#713f12]/20', border: 'border-[#713f12]', text: 'text-[#facc15]', dot: '#facc15', badge: 'bg-[#713f12] text-[#facc15]', label: 'Growth' },
+  3: { bg: 'bg-[#7f1d1d]/20', border: 'border-[#7f1d1d]', text: 'text-[#f87171]', dot: '#f87171', badge: 'bg-[#7f1d1d] text-[#f87171]', label: 'Aesthetic' },
+};
 
-  const phaseData = PHASES[phase];
-  const dayData = phaseData[day];
+const TYPE_ICON: Record<string, string> = {
+  strength: '💪',
+  cardio: '🏃',
+  hiit: '⚡',
+};
 
-  const phaseColors = {
-    1: { active: 'bg-[#14532d] border-[#4ade80] text-[#4ade80]', dot: '#4ade80' },
-    2: { active: 'bg-[#713f12] border-[#facc15] text-[#facc15]', dot: '#facc15' },
-    3: { active: 'bg-[#7f1d1d] border-[#f87171] text-[#f87171]', dot: '#f87171' },
-  };
+export default function WorkoutScreen({
+  checked, onCheckedChange, restMultiplier, level,
+  completedSessions, onSessionComplete,
+  customExercises, onAddCustomExercise, onRemoveCustomExercise,
+  streak,
+}: Props) {
+  const [activeSession, setActiveSession] = useState<number | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState<MuscleFilter>('all');
+
+  const nextSession = SESSIONS.find(s => !completedSessions.includes(s.sessionNum)) ?? SESSIONS[SESSIONS.length - 1];
+
+  if (activeSession !== null) {
+    return (
+      <SessionDetail
+        sessionNum={activeSession}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        restMultiplier={restMultiplier}
+        level={level}
+        completedSessions={completedSessions}
+        onSessionComplete={onSessionComplete}
+        customExercises={customExercises}
+        onAddCustomExercise={onAddCustomExercise}
+        onRemoveCustomExercise={onRemoveCustomExercise}
+        showLibrary={showLibrary}
+        setShowLibrary={setShowLibrary}
+        libraryFilter={libraryFilter}
+        setLibraryFilter={setLibraryFilter}
+        streak={streak}
+        onBack={() => setActiveSession(null)}
+      />
+    );
+  }
 
   return (
-    <div>
-      <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide sticky top-[60px] z-40 bg-[#0f0f0f]">
-        {([1, 2, 3] as const).map((p) => {
-          const isActive = phase === p;
-          const c = phaseColors[p];
-          return (
-            <button
-              key={p}
-              onClick={() => { setPhase(p); setDay('Mon'); }}
-              className={`flex-shrink-0 px-4 py-2 rounded-full border-[1.5px] font-semibold text-[13px] transition-all ${
-                isActive ? c.active : 'border-[#2a2a2a] text-[#888] bg-transparent'
-              }`}
-            >
-              Phase {p} · {PHASES[p].weeks}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex gap-2 px-4 py-2 overflow-x-auto scrollbar-hide sticky top-[108px] z-40 bg-[#0f0f0f]">
-        {DAYS.map((d) => {
-          const isActive = day === d;
-          const isToday = d === todayDay;
-          return (
-            <button
-              key={d}
-              onClick={() => setDay(d)}
-              className={`flex-shrink-0 px-3 py-2 rounded-2xl border text-[11px] font-semibold transition-all text-center ${
-                isActive
-                  ? 'bg-[#222] border-[#555] text-white'
-                  : 'bg-[#1a1a1a] border-[#2a2a2a] text-[#888]'
-              }`}
-            >
-              <span className="block">{d}</span>
-              {isToday && <span className="block text-[9px] text-[#4ade80] mt-0.5 font-bold">TODAY</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="px-4 py-3">
-        {(() => {
-          const dayKey = `p${phase}-${day}`;
-          const isDayDone = completedDays.includes(dayKey);
-          return (
-            <div className={`rounded-2xl p-4 mb-4 border ${
-              isDayDone ? 'bg-[#14532d]/30 border-[#4ade80]' :
-              phase === 1 ? 'bg-[#14532d]/20 border-[#14532d]' :
-              phase === 2 ? 'bg-[#713f12]/20 border-[#713f12]' :
-              'bg-[#7f1d1d]/20 border-[#7f1d1d]'
-            }`}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-white font-bold text-lg">{day} — {DAY_LABELS[day]}</h2>
-                  <p className="text-[#888] text-xs mt-0.5">Phase {phase}: {phaseData.label} · {phaseData.weeks}</p>
-                  {streak.count > 0 && day === todayDay && (
-                    <p className="text-[#facc15] text-xs mt-1 font-semibold">🔥 {streak.count} day streak — keep going!</p>
-                  )}
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {day === todayDay && !isDayDone && (
-                    <span className="bg-[#1e3a5f] text-[#60a5fa] text-[11px] font-bold px-3 py-1.5 rounded-lg">Today</span>
-                  )}
-                  {isDayDone ? (
-                    <span className="bg-[#14532d] text-[#4ade80] text-[11px] font-bold px-3 py-1.5 rounded-lg">✓ Done</span>
-                  ) : (
-                    <button
-                      onClick={() => onDayComplete(dayKey)}
-                      className="bg-[#4ade80] text-black text-[11px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
-                    >
-                      Mark Complete
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        {Array.isArray(dayData) ? (
+    <div className="px-4 py-4 space-y-4">
+      {/* Next Session Hero */}
+      <div className={`rounded-2xl border p-5 ${PHASE_COLORS[nextSession.phase].bg} ${PHASE_COLORS[nextSession.phase].border}`}>
+        <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${PHASE_COLORS[nextSession.phase].text}`}>
+          {completedSessions.length === 18 ? 'All Done!' : 'Up Next'}
+        </p>
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4 mb-4">
-              <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">How to read this</p>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-white font-bold text-lg">{dayData.length}</p>
-                  <p className="text-[10px] text-[#888] mt-0.5">Exercises</p>
-                </div>
-                <div className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-white font-bold text-lg">
-                    {Math.max(...dayData.map(e => e.sets))}
-                  </p>
-                  <p className="text-[10px] text-[#888] mt-0.5">Max Sets</p>
-                </div>
-                <div className="bg-[#0f0f0f] rounded-xl p-3">
-                  <p className="text-white font-bold text-lg">
-                    ~{Math.round(dayData.reduce((acc, e) => acc + e.sets * (e.restSeconds / 60 + 0.75), 0))}m
-                  </p>
-                  <p className="text-[10px] text-[#888] mt-0.5">Est. Time</p>
-                </div>
+            <h2 className="text-white font-bold text-xl leading-tight">
+              Session {nextSession.sessionNum} <span className="text-[#888] font-normal text-sm">of 18</span>
+            </h2>
+            <p className={`text-sm font-semibold mt-0.5 ${PHASE_COLORS[nextSession.phase].text}`}>
+              Phase {nextSession.phase} · {PHASE_COLORS[nextSession.phase].label}
+            </p>
+            <p className="text-[#ccc] text-sm mt-1">
+              {TYPE_ICON[nextSession.type]} {nextSession.label}
+            </p>
+            {streak.count > 0 && (
+              <p className="text-[#facc15] text-xs mt-2 font-semibold">🔥 {streak.count} day streak — keep it going!</p>
+            )}
+          </div>
+          <button
+            onClick={() => setActiveSession(nextSession.sessionNum)}
+            className="flex-shrink-0 bg-white text-black font-bold text-sm px-5 py-3 rounded-xl active:scale-95 transition-transform"
+          >
+            Start →
+          </button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="flex justify-between text-[11px] text-[#888] mb-1.5">
+            <span>{completedSessions.length} / 18 sessions done</span>
+            <span>{Math.round((completedSessions.length / 18) * 100)}%</span>
+          </div>
+          <div className="h-2 bg-[#2a2a2a] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${(completedSessions.length / 18) * 100}%`, background: PHASE_COLORS[nextSession.phase].dot }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Phase groups */}
+      {([1, 2, 3] as const).map(ph => {
+        const c = PHASE_COLORS[ph];
+        const phaseSessions = SESSIONS.filter(s => s.phase === ph);
+        const donePh = phaseSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
+        return (
+          <div key={ph} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#2a2a2a]">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: c.dot }} />
+                <span className="text-white font-bold text-sm">Phase {ph} · {c.label}</span>
               </div>
-              <p className="text-[11px] text-[#888] mt-3 leading-relaxed">
-                <span className="text-white font-semibold">Sets</span> = how many groups.&nbsp;
-                <span className="text-white font-semibold">Reps</span> = how many times per group.&nbsp;
-                Tap a set button when done — rest timer starts automatically.
-              </p>
+              <span className="text-[#888] text-xs">{donePh}/6 done</span>
+            </div>
+            {phaseSessions.map(s => {
+              const isDone = completedSessions.includes(s.sessionNum);
+              const isNext = s.sessionNum === nextSession.sessionNum;
+              return (
+                <button
+                  key={s.sessionNum}
+                  onClick={() => setActiveSession(s.sessionNum)}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-[#1e1e1e] last:border-0 text-left transition-colors active:bg-[#222] ${
+                    isNext ? 'bg-[#1e1e1e]' : ''
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                    isDone ? 'bg-[#14532d] text-[#4ade80]' :
+                    isNext ? `${c.badge} ring-2 ring-offset-1 ring-offset-[#1a1a1a]` :
+                    'bg-[#2a2a2a] text-[#666]'
+                  }`}>
+                    {isDone ? '✓' : s.sessionNum}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${isDone ? 'text-[#888]' : isNext ? 'text-white' : 'text-[#ccc]'}`}>
+                      {TYPE_ICON[s.type]} {s.label}
+                    </p>
+                  </div>
+                  {isNext && (
+                    <span className={`text-[11px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${c.badge}`}>Next</span>
+                  )}
+                  {!isDone && !isNext && (
+                    <svg className="w-4 h-4 text-[#555] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── SESSION DETAIL ───────────────────────────────────────────────────────────
+
+interface DetailProps extends Omit<Props, 'completedSessions' | 'onSessionComplete'> {
+  sessionNum: number;
+  completedSessions: number[];
+  onSessionComplete: (n: number) => void;
+  showLibrary: boolean;
+  setShowLibrary: (v: boolean) => void;
+  libraryFilter: MuscleFilter;
+  setLibraryFilter: (v: MuscleFilter) => void;
+  onBack: () => void;
+}
+
+function SessionDetail({
+  sessionNum, checked, onCheckedChange, restMultiplier, level,
+  completedSessions, onSessionComplete,
+  customExercises, onAddCustomExercise, onRemoveCustomExercise,
+  showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
+  streak, onBack,
+}: DetailProps) {
+  const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
+  const phaseData = PHASES[session.phase];
+  const dayData = phaseData[session.day];
+  const c = PHASE_COLORS[session.phase];
+  const isDone = completedSessions.includes(sessionNum);
+  const sessionKey = `s${sessionNum}`;
+  const customs = customExercises[sessionKey] ?? [];
+  const baseExercises = Array.isArray(dayData) ? dayData : [];
+
+  // Library: filter out exercises already in this session
+  const sessionExNames = new Set(baseExercises.map(e => e.name).concat(customs.map(e => e.name)));
+  const libraryFiltered = EXERCISE_LIBRARY.filter(e =>
+    (libraryFilter === 'all' || e.muscleGroup === libraryFilter) && !sessionExNames.has(e.name)
+  );
+
+  return (
+    <>
+      {/* Library overlay */}
+      {showLibrary && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm"
+             onClick={() => setShowLibrary(false)}>
+          <div className="bg-[#1a1a1a] border-t border-[#2a2a2a] rounded-t-3xl max-h-[80vh] flex flex-col"
+               onClick={e => e.stopPropagation()}>
+            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-bold text-lg">Exercise Library</h3>
+                <p className="text-[#888] text-xs mt-0.5">Tap to add to Session {sessionNum}</p>
+              </div>
+              <button onClick={() => setShowLibrary(false)}
+                className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#888]">
+                ✕
+              </button>
             </div>
 
-            <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3">Exercises</p>
-            {dayData.map((ex, i) => (
-              <ExerciseCard
-                key={i}
-                exercise={ex}
-                phase={phase}
-                dayKey={day}
-                exerciseIndex={i}
-                checked={checked}
-                onCheckedChange={onCheckedChange}
-                restMultiplier={restMultiplier}
-                level={level}
-              />
-            ))}
-          </div>
-        ) : dayData.type === 'hiit' ? (
-          <HIITTimer data={dayData} />
-        ) : (
-          <div className="space-y-3">
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-              <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Cardio Session</p>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#0f0f0f] rounded-xl p-3 text-center">
-                  <p className="text-white font-bold text-lg">{dayData.duration}</p>
-                  <p className="text-[10px] text-[#888] mt-0.5">Duration</p>
-                </div>
-                <div className="bg-[#0f0f0f] rounded-xl p-3 text-center">
-                  <p className="text-white font-bold text-base leading-tight">{dayData.pace}</p>
-                  <p className="text-[10px] text-[#888] mt-0.5">Pace</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {dayData.items.map((item, i) => (
-                  <div key={i} className="flex gap-3 items-start">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#14532d] text-[#4ade80] text-xs flex items-center justify-center font-bold mt-0.5">
-                      {i + 1}
-                    </span>
-                    <span className="text-[#ccc] text-sm leading-relaxed">{item}</span>
+            {/* Filter tabs */}
+            <div className="flex gap-2 px-5 pb-3 overflow-x-auto scrollbar-hide">
+              {(['all', 'push', 'pull', 'legs', 'core', 'full'] as MuscleFilter[]).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setLibraryFilter(f)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    libraryFilter === f
+                      ? 'bg-white text-black border-white'
+                      : 'bg-transparent text-[#888] border-[#2a2a2a]'
+                  }`}
+                >
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Exercise list */}
+            <div className="overflow-y-auto px-4 pb-6 space-y-2">
+              {libraryFiltered.length === 0 ? (
+                <p className="text-[#888] text-sm text-center py-8">All {libraryFilter} exercises already in this session.</p>
+              ) : (
+                libraryFiltered.map(ex => (
+                  <div key={ex.name}
+                    className="flex items-center gap-3 bg-[#111] border border-[#2a2a2a] rounded-2xl px-4 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold text-sm">{ex.name}</p>
+                      <p className="text-[#888] text-xs mt-0.5">{ex.muscles.join(' · ')} · {ex.sets}×{ex.reps}</p>
+                    </div>
+                    <button
+                      onClick={() => { onAddCustomExercise(sessionNum, ex); setShowLibrary(false); }}
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg ${c.badge}`}
+                    >
+                      +
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
-              <p className="text-xs text-[#888] text-center">No sets or reps today — just time and pace. Enjoy it.</p>
+                ))
+              )}
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <div>
+        {/* Back header */}
+        <div className="flex items-center gap-3 px-4 py-3 sticky top-[60px] z-40 bg-[#0f0f0f] border-b border-[#1a1a1a]">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-[#888] text-sm">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Sessions
+          </button>
+          <span className="text-[#444]">/</span>
+          <span className="text-white text-sm font-semibold">Session {sessionNum} of 18</span>
+        </div>
+
+        <div className="px-4 py-4 space-y-4">
+          {/* Session banner */}
+          <div className={`rounded-2xl border p-4 ${c.bg} ${c.border}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className={`text-xs font-bold uppercase tracking-widest ${c.text}`}>
+                  Phase {session.phase} · {c.label}
+                </p>
+                <h2 className="text-white font-bold text-lg mt-1">
+                  {TYPE_ICON[session.type]} {session.label}
+                </h2>
+                {streak.count > 0 && (
+                  <p className="text-[#facc15] text-xs mt-1.5 font-semibold">🔥 {streak.count} day streak!</p>
+                )}
+              </div>
+              {isDone ? (
+                <span className="flex-shrink-0 bg-[#14532d] text-[#4ade80] text-[11px] font-bold px-3 py-1.5 rounded-lg">
+                  ✓ Done
+                </span>
+              ) : (
+                <button
+                  onClick={() => onSessionComplete(sessionNum)}
+                  className="flex-shrink-0 bg-white text-black text-[11px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform"
+                >
+                  Mark Complete
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Strength session */}
+          {session.type === 'strength' && (
+            <div>
+              {/* Quick stats */}
+              <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4 mb-4">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-[#0f0f0f] rounded-xl p-3">
+                    <p className="text-white font-bold text-lg">{baseExercises.length + customs.length}</p>
+                    <p className="text-[10px] text-[#888] mt-0.5">Exercises</p>
+                  </div>
+                  <div className="bg-[#0f0f0f] rounded-xl p-3">
+                    <p className="text-white font-bold text-lg">
+                      {baseExercises.length > 0 ? Math.max(...baseExercises.map(e => e.sets)) : '—'}
+                    </p>
+                    <p className="text-[10px] text-[#888] mt-0.5">Max Sets</p>
+                  </div>
+                  <div className="bg-[#0f0f0f] rounded-xl p-3">
+                    <p className="text-white font-bold text-lg">
+                      ~{Math.round(baseExercises.reduce((acc, e) => acc + e.sets * (e.restSeconds / 60 + 0.75), 0))}m
+                    </p>
+                    <p className="text-[10px] text-[#888] mt-0.5">Est. Time</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-[#888] mt-3 leading-relaxed">
+                  <span className="text-white font-semibold">Sets</span> = how many groups.{' '}
+                  <span className="text-white font-semibold">Reps</span> = how many times per group.{' '}
+                  Tap a set button when done — rest timer starts automatically.
+                </p>
+              </div>
+
+              <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3">Exercises</p>
+
+              {baseExercises.map((ex, i) => (
+                <ExerciseCard
+                  key={i}
+                  exercise={ex}
+                  phase={session.phase}
+                  sessionKey={sessionKey}
+                  exerciseIndex={i}
+                  checked={checked}
+                  onCheckedChange={onCheckedChange}
+                  restMultiplier={restMultiplier}
+                  level={level}
+                />
+              ))}
+
+              {customs.length > 0 && (
+                <>
+                  <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3 mt-2">Added by You</p>
+                  {customs.map((ex, i) => (
+                    <ExerciseCard
+                      key={`custom-${i}`}
+                      exercise={ex}
+                      phase={session.phase}
+                      sessionKey={`${sessionKey}-custom`}
+                      exerciseIndex={i}
+                      checked={checked}
+                      onCheckedChange={onCheckedChange}
+                      restMultiplier={restMultiplier}
+                      level={level}
+                      onRemove={() => onRemoveCustomExercise(sessionNum, ex.name)}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Add exercise button */}
+              <button
+                onClick={() => setShowLibrary(true)}
+                className="w-full mt-2 py-4 rounded-2xl border border-dashed border-[#2a2a2a] text-[#888] font-semibold text-sm flex items-center justify-center gap-2 active:bg-[#1a1a1a] transition-colors"
+              >
+                <span className="text-xl leading-none">+</span>
+                Add an Exercise
+              </button>
+            </div>
+          )}
+
+          {/* HIIT session */}
+          {session.type === 'hiit' && Array.isArray(dayData) === false && !Array.isArray(dayData) && (dayData as { type: string }).type === 'hiit' && (
+            <HIITTimer data={dayData as { type: 'hiit'; rounds: number; workSeconds: number; restSeconds: number; exercises: string[] }} />
+          )}
+
+          {/* Cardio session */}
+          {session.type === 'cardio' && !Array.isArray(dayData) && (dayData as { type: string }).type === 'cardio' && (() => {
+            const cd = dayData as { type: 'cardio'; duration: string; pace: string; items: string[] };
+            return (
+              <div className="space-y-3">
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+                  <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Cardio Session</p>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-[#0f0f0f] rounded-xl p-3 text-center">
+                      <p className="text-white font-bold text-lg">{cd.duration}</p>
+                      <p className="text-[10px] text-[#888] mt-0.5">Duration</p>
+                    </div>
+                    <div className="bg-[#0f0f0f] rounded-xl p-3 text-center">
+                      <p className="text-white font-bold text-sm leading-tight">{cd.pace}</p>
+                      <p className="text-[10px] text-[#888] mt-0.5">Pace</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {cd.items.map((item, i) => (
+                      <div key={i} className="flex gap-3 items-start">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#14532d] text-[#4ade80] text-xs flex items-center justify-center font-bold mt-0.5">
+                          {i + 1}
+                        </span>
+                        <span className="text-[#ccc] text-sm leading-relaxed">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
+                  <p className="text-xs text-[#888] text-center">No sets or reps today — just time and pace. Enjoy it.</p>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
