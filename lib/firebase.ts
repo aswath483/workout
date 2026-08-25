@@ -1,7 +1,7 @@
 'use client';
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signInAnonymously, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { initializeFirestore, type Firestore } from 'firebase/firestore';
 
 // Fill these in from the Firebase console (Project settings → General → Your apps → SDK setup).
 // Set them as NEXT_PUBLIC_* env vars (in Vercel project settings and .env.local) — cloud sync
@@ -38,7 +38,10 @@ export function getFirebaseAuth(): Auth | null {
 export function getFirebaseDb(): Firestore | null {
   const a = ensureApp();
   if (!a) return null;
-  if (!dbInstance) dbInstance = getFirestore(a);
+  // Firestore's default WebChannel transport can hang for a long time on some mobile/
+  // carrier networks before it detects it needs to fall back — auto-detecting up front
+  // avoids that stall.
+  if (!dbInstance) dbInstance = initializeFirestore(a, { experimentalAutoDetectLongPolling: true });
   return dbInstance;
 }
 

@@ -355,7 +355,11 @@ export default function App() {
   useEffect(() => {
     if (!myProfileId || !viewingProfileId) return;
     let cancelled = false;
-    syncProfile(viewingProfileId, viewingProfileId === myProfileId).finally(() => {
+    // A slow/stalled connection should never block the app forever — fall through to
+    // local data after a few seconds; the sync itself keeps running in the background.
+    const sync = syncProfile(viewingProfileId, viewingProfileId === myProfileId);
+    const timeout = new Promise<void>((resolve) => setTimeout(resolve, 6000));
+    Promise.race([sync, timeout]).finally(() => {
       if (!cancelled) setSyncedProfileId(viewingProfileId);
     });
     return () => { cancelled = true; };
