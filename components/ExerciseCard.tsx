@@ -301,7 +301,7 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
             </a>
 
             <WeightLogger
-              exerciseKey={allSetsKey}
+              exerciseKey={exercise.name}
               exerciseName={exercise.name}
               suggestedWeight={exercise.weight}
               profileId={profileId}

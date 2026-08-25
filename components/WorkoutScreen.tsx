@@ -9,6 +9,7 @@ import HIITTimer from './HIITTimer';
 import type { Level, StreakData } from '@/app/page';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 import { adaptExercisesForPain } from '@/lib/painAdaptation';
+import { applyWeeklyVariation, applyDeload, isDeloadWeek } from '@/lib/weeklyVariation';
 
 interface Props {
   checked: Record<string, boolean>;
@@ -252,8 +253,9 @@ function SessionDetail({
   const sessionKey = `s${sessionNum}`;
   const customs = customExercises[sessionKey] ?? [];
   const rawBaseExercises = Array.isArray(dayData) ? dayData : [];
-  const baseExercises = adaptExercisesForPain(rawBaseExercises, painAreas);
-  const adaptedCustoms = adaptExercisesForPain(customs, painAreas);
+  const variedBaseExercises = applyWeeklyVariation(rawBaseExercises, session.weekInPhase);
+  const baseExercises = applyDeload(adaptExercisesForPain(variedBaseExercises, painAreas), session.weekInPhase);
+  const adaptedCustoms = applyDeload(adaptExercisesForPain(customs, painAreas), session.weekInPhase);
 
   // Note / mood state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -459,11 +461,18 @@ function SessionDetail({
           {/* Strength session */}
           {session.type === 'strength' && (
             <div>
+              {isDeloadWeek(session.weekInPhase) && (
+                <div className="bg-[#1e3a5f]/30 border border-[#1e3a5f] rounded-2xl p-3 mb-4">
+                  <p className="text-[12px] text-[#60a5fa] leading-relaxed">
+                    🪶 <span className="font-semibold">Deload week</span> — one fewer set per exercise to help you recover before the next phase. Same weight, same exercises, just lighter volume.
+                  </p>
+                </div>
+              )}
               {/* Quick stats */}
               <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4 mb-4">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
-                    <p className="text-white font-bold text-lg">{baseExercises.length + customs.length}</p>
+                    <p className="text-white font-bold text-lg">{baseExercises.length + adaptedCustoms.length}</p>
                     <p className="text-[10px] text-[#888] mt-0.5">Exercises</p>
                   </div>
                   <div className="bg-[#0f0f0f] rounded-xl p-3">

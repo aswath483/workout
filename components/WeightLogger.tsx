@@ -9,7 +9,7 @@ interface WeightLogEntry {
 }
 
 interface Props {
-  exerciseKey: string; // e.g. "p1-Mon-0"
+  exerciseKey: string; // the exercise name — history is shared across every session/week it appears in
   exerciseName: string;
   suggestedWeight: string;
   profileId: ProfileId;
@@ -45,6 +45,12 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
 
   const lastEntry = log[0];
   const prevEntry = log[1];
+
+  // Two most recent logs at the same weight → the classic "completed it easily twice
+  // in a row" progression signal (same rule as the Progress screen's weight rule).
+  const readyToProgress = Boolean(
+    lastEntry && prevEntry && lastEntry.weight.trim() === prevEntry.weight.trim()
+  );
 
   const weightDiff = lastEntry && prevEntry
     ? (() => {
@@ -85,6 +91,14 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
               <p className="text-[9px] text-[#888] mt-0.5">vs last</p>
             </div>
           )}
+        </div>
+      )}
+
+      {readyToProgress && (
+        <div className="bg-[#14532d]/30 border border-[#14532d] rounded-xl p-3">
+          <p className="text-[12px] text-[#4ade80] leading-relaxed">
+            💪 Same weight on {exerciseName} 2 sessions in a row — try +2.5kg (or +1 rep) next time.
+          </p>
         </div>
       )}
 
