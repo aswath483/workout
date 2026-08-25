@@ -4,7 +4,7 @@ import WorkoutScreen from '@/components/WorkoutScreen';
 import ProgressScreen from '@/components/ProgressScreen';
 import TipsScreen from '@/components/TipsScreen';
 import BottomNav from '@/components/BottomNav';
-import type { ExerciseInfo } from '@/data/workoutData';
+import { PAIN_AREAS, type ExerciseInfo, type PainArea } from '@/data/workoutData';
 import { syncProfile } from '@/lib/cloudSync';
 import { PROFILES, isProfileId, profileKey, profileLabel, type ProfileId } from '@/lib/profiles';
 
@@ -81,11 +81,17 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [screen, setScreen] = useState<Screen>('workout');
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
+  const [showPainPicker, setShowPainPicker] = useState(false);
   const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>(profileId, 'checked', {});
   const [completedSessions, setCompletedSessions, sessionsLoaded] = useLocalStorage<number[]>(profileId, 'sessions_done', []);
   const [customExercises, setCustomExercises, customLoaded] = useLocalStorage<Record<string, ExerciseInfo[]>>(profileId, 'custom', {});
   const [level, setLevel, levelLoaded] = useLocalStorage<Level>(profileId, 'level', 'beginner');
   const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>(profileId, 'streak', { count: 0, lastDate: '' });
+  const [painAreas, setPainAreas, painAreasLoaded] = useLocalStorage<PainArea[]>(profileId, 'pain_areas', []);
+
+  const togglePainArea = (id: PainArea) => {
+    setPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
+  };
 
   const handleCheckedChange = (key: string, value: boolean) => {
     setChecked((prev) => ({ ...prev, [key]: value }));
@@ -129,7 +135,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
     setStreak({ count: 0, lastDate: '' });
   };
 
-  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded) {
+  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
         <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
@@ -178,6 +184,16 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               )}
+            </button>
+            <button
+              onClick={() => !readOnly && setShowPainPicker(true)}
+              disabled={readOnly}
+              title="Adjust for pain"
+              className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
+                painAreas.length > 0 ? 'bg-[#7f1d1d]/40 border border-[#f87171]/40' : 'bg-[#2a2a2a]'
+              } ${readOnly ? 'opacity-50' : ''}`}
+            >
+              <span className="text-sm">🩹</span>
             </button>
           </div>
         </div>
@@ -276,6 +292,45 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
+      {showPainPicker && !readOnly && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+             onClick={() => setShowPainPicker(false)}>
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
+               onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-white font-bold text-lg mb-1">Adjust for Pain</h2>
+            <p className="text-[#888] text-sm mb-5">
+              Toggle any area bothering you — exercises that load it get swapped for a safer option automatically, starting with today&apos;s session. Same number of exercises, just kinder movements.
+            </p>
+            <div className="space-y-3">
+              {PAIN_AREAS.map((area) => {
+                const isActive = painAreas.includes(area.id);
+                return (
+                  <button
+                    key={area.id}
+                    onClick={() => togglePainArea(area.id)}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all ${
+                      isActive ? 'border-[#f87171] bg-[#7f1d1d]/20' : 'border-[#2a2a2a] bg-[#111]'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <p className={`font-bold text-sm ${isActive ? 'text-[#f87171]' : 'text-white'}`}>{area.label}</p>
+                    </div>
+                    {isActive && <span className="text-[#f87171] text-lg">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-[#666] leading-relaxed mt-4">
+              This reduces strain on the area you pick — it isn&apos;t medical advice. For a real or persistent injury, please get it looked at by a professional.
+            </p>
+            <button onClick={() => setShowPainPicker(false)}
+              className="w-full mt-4 py-3 rounded-2xl bg-[#2a2a2a] text-white font-semibold text-sm">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className={readOnly ? 'pointer-events-none' : undefined}>
         {screen === 'workout' && (
           <WorkoutScreen
@@ -289,6 +344,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
             onAddCustomExercise={handleAddCustomExercise}
             onRemoveCustomExercise={handleRemoveCustomExercise}
             streak={streak}
+            painAreas={painAreas}
             profileId={profileId}
           />
         )}

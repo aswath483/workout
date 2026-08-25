@@ -436,6 +436,114 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     tip: 'Deceptively tough on the core and shoulders — go slow before speeding up.', youtubeQuery: 'bear crawl proper form beginners' },
 ];
 
+// ─── PAIN-AWARE EXERCISE SUBSTITUTION ───────────────────────────────────────
+// This reduces strain on a flagged area, it isn't medical advice — for a real
+// injury (like a prior MCL tear), get the specific pain looked at by a professional.
+
+export type PainArea = 'knee' | 'lower_back' | 'shoulder' | 'elbow' | 'wrist';
+
+export const PAIN_AREAS: { id: PainArea; label: string }[] = [
+  { id: 'knee', label: 'Knee' },
+  { id: 'lower_back', label: 'Lower Back' },
+  { id: 'shoulder', label: 'Shoulder' },
+  { id: 'elbow', label: 'Elbow' },
+  { id: 'wrist', label: 'Wrist' },
+];
+
+// Which pain areas an exercise commonly loads heavily. An exercise with no entry
+// here is left alone regardless of which areas are toggled on.
+export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
+  'Barbell Squat':        ['knee', 'lower_back'],
+  'Goblet Squat':         ['knee'],
+  'Sumo Deadlift':        ['knee', 'lower_back'],
+  'Dumbbell Deadlift':    ['knee', 'lower_back'],
+  'Romanian Deadlift':    ['knee', 'lower_back'],
+  'Deadlift':             ['knee', 'lower_back'],
+  'Good Morning':         ['lower_back'],
+  'Walking Lunge':        ['knee'],
+  'Lunges':               ['knee'],
+  'Bulgarian Split Squat':['knee'],
+  'Dumbbell Step-Up':     ['knee'],
+  'Box Jump':             ['knee'],
+  'Burpees':              ['knee'],
+  'Burpees Finisher':     ['knee'],
+  'High Knees':           ['knee'],
+  'Mountain Climbers':    ['knee', 'wrist'],
+  'Barbell Row':          ['lower_back'],
+  'Bent Over Row':        ['lower_back'],
+  'Russian Twist':        ['lower_back'],
+  'Superman':             ['lower_back'],
+  'Leg Raises':           ['lower_back'],
+  'Arnold Press':         ['shoulder'],
+  'Barbell Overhead Press': ['shoulder'],
+  'Shoulder Press':       ['shoulder'],
+  'Incline Dumbbell Press': ['shoulder'],
+  'Dumbbell Chest Fly':   ['shoulder'],
+  'Dumbbell Front Raise': ['shoulder'],
+  'Lateral Raise':        ['shoulder'],
+  'Dips':                 ['shoulder', 'elbow'],
+  'Pull-Ups':             ['shoulder', 'elbow'],
+  'Push Press':           ['shoulder'],
+  'Barbell Curl':         ['elbow', 'wrist'],
+  'Bicep Curl':           ['elbow'],
+  'Concentration Curl':   ['elbow'],
+  'Triceps Extension':    ['elbow'],
+  'Skull Crusher':        ['elbow'],
+  'Pushup':               ['wrist'],
+  'Pushup Finisher':      ['wrist'],
+  'Bench Dip':            ['shoulder', 'wrist'],
+  'Bear Crawl':           ['wrist'],
+  'Renegade Row':         ['wrist'],
+};
+
+// For each strained exercise, which exercise (by name, from EXERCISE_LIBRARY) to swap
+// in for a given active pain area — same slot, same session exercise count, just a
+// different movement. No entry for a given area means no safe swap is known yet, so
+// the original stays in place with a caution badge instead of silently vanishing.
+export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, string>>>> = {
+  'Barbell Squat':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Goblet Squat':           { knee: 'Glute Bridge' },
+  'Sumo Deadlift':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Dumbbell Deadlift':      { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Romanian Deadlift':      { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Deadlift':               { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Good Morning':           { lower_back: 'Glute Bridge' },
+  'Walking Lunge':          { knee: 'Clamshell' },
+  'Lunges':                 { knee: 'Clamshell' },
+  'Bulgarian Split Squat':  { knee: 'Clamshell' },
+  'Dumbbell Step-Up':       { knee: 'Clamshell' },
+  'Box Jump':               { knee: 'Farmer Walk' },
+  'Burpees':                { knee: 'Farmer Walk' },
+  'Burpees Finisher':       { knee: 'Farmer Walk' },
+  'High Knees':             { knee: 'Farmer Walk' },
+  'Mountain Climbers':      { knee: 'Farmer Walk', wrist: 'Farmer Walk' },
+  'Barbell Row':            { lower_back: 'Band Row' },
+  'Bent Over Row':          { lower_back: 'Band Row' },
+  'Russian Twist':          { lower_back: 'Pallof Press' },
+  'Superman':               { lower_back: 'Bird Dog' },
+  'Leg Raises':             { lower_back: 'Dead Bug' },
+  'Arnold Press':           { shoulder: 'Floor Press' },
+  'Barbell Overhead Press': { shoulder: 'Floor Press' },
+  'Shoulder Press':         { shoulder: 'Floor Press' },
+  'Incline Dumbbell Press': { shoulder: 'Floor Press' },
+  'Dumbbell Chest Fly':     { shoulder: 'Floor Press' },
+  'Dumbbell Front Raise':   { shoulder: 'Scapular Push-up' },
+  'Lateral Raise':          { shoulder: 'Face Pull' },
+  'Dips':                   { shoulder: 'Floor Press', elbow: 'Band Triceps Pushdown' },
+  'Pull-Ups':               { shoulder: 'Band Row', elbow: 'Band Row' },
+  'Push Press':             { shoulder: 'Floor Press' },
+  'Barbell Curl':           { elbow: 'Hammer Curl', wrist: 'Hammer Curl' },
+  'Bicep Curl':             { elbow: 'Hammer Curl' },
+  'Concentration Curl':     { elbow: 'Hammer Curl' },
+  'Triceps Extension':      { elbow: 'Band Triceps Pushdown' },
+  'Skull Crusher':          { elbow: 'Band Triceps Pushdown' },
+  'Pushup':                 { wrist: 'Band Chest Press' },
+  'Pushup Finisher':        { wrist: 'Band Chest Press' },
+  'Bench Dip':              { shoulder: 'Band Triceps Pushdown', wrist: 'Band Triceps Pushdown' },
+  'Bear Crawl':             { wrist: 'Dead Bug' },
+  'Renegade Row':           { wrist: 'Single-Arm Dumbbell Row' },
+};
+
 export const PHASES: Record<1 | 2 | 3, PhaseData> = {
   1: {
     color: 'green',

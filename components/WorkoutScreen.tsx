@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY,
-  type ExerciseInfo,
+  type ExerciseInfo, type PainArea,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
 import type { Level, StreakData } from '@/app/page';
 import { profileKey, type ProfileId } from '@/lib/profiles';
+import { adaptExercisesForPain } from '@/lib/painAdaptation';
 
 interface Props {
   checked: Record<string, boolean>;
@@ -21,6 +22,7 @@ interface Props {
   onRemoveCustomExercise: (sessionNum: number, exName: string) => void;
   streak: StreakData;
   profileId: ProfileId;
+  painAreas: PainArea[];
 }
 
 type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
@@ -66,7 +68,7 @@ export default function WorkoutScreen({
   checked, onCheckedChange, restMultiplier, level,
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
-  streak, profileId,
+  streak, profileId, painAreas,
 }: Props) {
   const [activeSession, setActiveSession] = useState<number | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
@@ -87,6 +89,7 @@ export default function WorkoutScreen({
         customExercises={customExercises}
         onAddCustomExercise={onAddCustomExercise}
         onRemoveCustomExercise={onRemoveCustomExercise}
+        painAreas={painAreas}
         showLibrary={showLibrary}
         setShowLibrary={setShowLibrary}
         libraryFilter={libraryFilter}
@@ -239,7 +242,7 @@ function SessionDetail({
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
   showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
-  streak, onBack, profileId,
+  streak, onBack, profileId, painAreas,
 }: DetailProps) {
   const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
   const phaseData = PHASES[session.phase];
@@ -248,7 +251,9 @@ function SessionDetail({
   const isDone = completedSessions.includes(sessionNum);
   const sessionKey = `s${sessionNum}`;
   const customs = customExercises[sessionKey] ?? [];
-  const baseExercises = Array.isArray(dayData) ? dayData : [];
+  const rawBaseExercises = Array.isArray(dayData) ? dayData : [];
+  const baseExercises = adaptExercisesForPain(rawBaseExercises, painAreas);
+  const adaptedCustoms = adaptExercisesForPain(customs, painAreas);
 
   // Note / mood state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -265,7 +270,7 @@ function SessionDetail({
   };
 
   // Library: filter out exercises already in this session
-  const sessionExNames = new Set(baseExercises.map(e => e.name).concat(customs.map(e => e.name)));
+  const sessionExNames = new Set(baseExercises.map(e => e.exercise.name).concat(customs.map(e => e.name)));
   const libraryFiltered = EXERCISE_LIBRARY.filter(e =>
     (libraryFilter === 'all' || e.muscleGroup === libraryFilter) && !sessionExNames.has(e.name)
   );
@@ -463,13 +468,13 @@ function SessionDetail({
                   </div>
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
                     <p className="text-white font-bold text-lg">
-                      {baseExercises.length > 0 ? Math.max(...baseExercises.map(e => e.sets)) : '—'}
+                      {baseExercises.length > 0 ? Math.max(...baseExercises.map(e => e.exercise.sets)) : '—'}
                     </p>
                     <p className="text-[10px] text-[#888] mt-0.5">Max Sets</p>
                   </div>
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
                     <p className="text-white font-bold text-lg">
-                      ~{Math.round(baseExercises.reduce((acc, e) => acc + e.sets * (e.restSeconds / 60 + 0.75), 0))}m
+                      ~{Math.round(baseExercises.reduce((acc, e) => acc + e.exercise.sets * (e.exercise.restSeconds / 60 + 0.75), 0))}m
                     </p>
                     <p className="text-[10px] text-[#888] mt-0.5">Est. Time</p>
                   </div>
@@ -483,10 +488,13 @@ function SessionDetail({
 
               <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3">Exercises</p>
 
-              {baseExercises.map((ex, i) => (
+              {baseExercises.map((adapted, i) => (
                 <ExerciseCard
-                  key={i}
-                  exercise={ex}
+                  key={`${i}-${adapted.exercise.name}`}
+                  exercise={adapted.exercise}
+                  swappedFor={adapted.swappedFor}
+                  originalName={adapted.original?.name}
+                  caution={adapted.caution}
                   phase={session.phase}
                   sessionKey={sessionKey}
                   exerciseIndex={i}
@@ -498,13 +506,16 @@ function SessionDetail({
                 />
               ))}
 
-              {customs.length > 0 && (
+              {adaptedCustoms.length > 0 && (
                 <>
                   <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3 mt-2">Added by You</p>
-                  {customs.map((ex, i) => (
+                  {adaptedCustoms.map((adapted, i) => (
                     <ExerciseCard
-                      key={`custom-${i}`}
-                      exercise={ex}
+                      key={`custom-${i}-${adapted.exercise.name}`}
+                      exercise={adapted.exercise}
+                      swappedFor={adapted.swappedFor}
+                      originalName={adapted.original?.name}
+                      caution={adapted.caution}
                       phase={session.phase}
                       sessionKey={`${sessionKey}-custom`}
                       exerciseIndex={i}
@@ -513,7 +524,7 @@ function SessionDetail({
                       restMultiplier={restMultiplier}
                       level={level}
                       profileId={profileId}
-                      onRemove={() => onRemoveCustomExercise(sessionNum, ex.name)}
+                      onRemove={() => onRemoveCustomExercise(sessionNum, adapted.original?.name ?? adapted.exercise.name)}
                     />
                   ))}
                 </>

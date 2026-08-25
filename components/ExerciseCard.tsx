@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import type { ExerciseInfo } from '@/data/workoutData';
-import { EQUIPMENT_BY_EXERCISE, EZ_BAR_ALTERNATIVE } from '@/data/workoutData';
+import type { ExerciseInfo, PainArea } from '@/data/workoutData';
+import { EQUIPMENT_BY_EXERCISE, EZ_BAR_ALTERNATIVE, PAIN_AREAS } from '@/data/workoutData';
 import type { Level } from '@/app/page';
 import RestTimer from './RestTimer';
 import ExerciseAnimation, { EXERCISE_ANIMATION } from './ExerciseAnimation';
@@ -19,6 +19,9 @@ interface Props {
   level: Level;
   profileId: ProfileId;
   onRemove?: () => void;
+  swappedFor?: PainArea;
+  originalName?: string;
+  caution?: PainArea;
 }
 
 const MUSCLE_COLORS: Record<string, string> = {
@@ -35,7 +38,11 @@ const PHASE_COLORS = {
   3: { badge: 'bg-[#7f1d1d] text-[#f87171]', ring: '#f87171', label: 'P3' },
 };
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove }: Props) {
+function painAreaLabel(area: PainArea): string {
+  return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
+}
+
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
@@ -106,6 +113,16 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${phaseColor.badge}`}>
                   {phaseColor.label}
                 </span>
+                {swappedFor && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#7f1d1d]/40 text-[#f87171]" title={originalName ? `Swapped from ${originalName}` : undefined}>
+                    🩹 Swapped · {painAreaLabel(swappedFor)}
+                  </span>
+                )}
+                {caution && !swappedFor && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]" title="No safe swap known yet for this combination — go easy or skip it.">
+                    ⚠️ Caution · {painAreaLabel(caution)}
+                  </span>
+                )}
                 {onRemove && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onRemove(); }}
