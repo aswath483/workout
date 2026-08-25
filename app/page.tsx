@@ -5,6 +5,8 @@ import ProgressScreen from '@/components/ProgressScreen';
 import TipsScreen from '@/components/TipsScreen';
 import BottomNav from '@/components/BottomNav';
 import type { ExerciseInfo } from '@/data/workoutData';
+import { initCloudSync } from '@/lib/cloudSync';
+import { isFirebaseConfigured } from '@/lib/firebase';
 
 type Screen = 'workout' | 'progress' | 'tips';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -63,7 +65,7 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-export default function App() {
+function WorkoutApp() {
   const [screen, setScreen] = useState<Screen>('workout');
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>('wk_checked', {});
@@ -233,4 +235,27 @@ export default function App() {
       <BottomNav active={screen} onChange={setScreen} />
     </div>
   );
+}
+
+export default function App() {
+  // When Firebase isn't configured yet, this stays true from the start and behaves
+  // exactly like before (localStorage-only). Once configured, we wait for the initial
+  // cloud pull to merge into localStorage before mounting WorkoutApp, so its state
+  // hooks read the synced data on their first pass instead of racing the network.
+  const [cloudReady, setCloudReady] = useState(!isFirebaseConfigured);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    initCloudSync().finally(() => setCloudReady(true));
+  }, []);
+
+  if (!cloudReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
+        <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <WorkoutApp />;
 }
