@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { SESSIONS } from '@/data/workoutData';
 import { MOODS, type SessionNote } from './WorkoutScreen';
 import BodyWeightTracker from './BodyWeightTracker';
+import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface Props {
   completedSessions: number[];
   onReset: () => void;
+  profileId: ProfileId;
 }
 
 const PHASE_META = [
@@ -23,13 +25,13 @@ const TYPE_COLOR: Record<string, string> = {
 };
 const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function ProgressScreen({ completedSessions, onReset }: Props) {
+export default function ProgressScreen({ completedSessions, onReset, profileId }: Props) {
   const total = completedSessions.length;
   const nextSession = SESSIONS.find(s => !completedSessions.includes(s.sessionNum));
 
   const [sessionNotes] = useState<Record<number, SessionNote>>(() => {
     if (typeof window === 'undefined') return {};
-    try { return JSON.parse(localStorage.getItem('wk_session_notes') || '{}'); } catch { return {}; }
+    try { return JSON.parse(localStorage.getItem(profileKey(profileId, 'session_notes')) || '{}'); } catch { return {}; }
   });
 
   // Breakdown by type
@@ -53,7 +55,7 @@ export default function ProgressScreen({ completedSessions, onReset }: Props) {
   return (
     <div className="px-4 py-4 space-y-4">
       {/* Body Weight Tracker */}
-      <BodyWeightTracker />
+      <BodyWeightTracker profileId={profileId} />
 
       {/* Overall ring */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">

@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface WeightLogEntry {
   weight: string;
@@ -11,10 +12,11 @@ interface Props {
   exerciseKey: string; // e.g. "p1-Mon-0"
   exerciseName: string;
   suggestedWeight: string;
+  profileId: ProfileId;
 }
 
-export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeight }: Props) {
-  const storageKey = `wk_wlog_${exerciseKey}`;
+export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeight, profileId }: Props) {
+  const storageKey = profileKey(profileId, `wlog_${exerciseKey}`);
   const [log, setLog] = useState<WeightLogEntry[]>([]);
   const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');

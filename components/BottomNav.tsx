@@ -38,7 +38,7 @@ const items: { id: Screen; label: string; icon: React.ReactNode }[] = [
 
 export default function BottomNav({ active, onChange }: Props) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#2a2a2a] flex z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-[#1a1a1a] border-t border-[#2a2a2a] flex z-50">
       {items.map((item) => {
         const isActive = active === item.id;
         return (

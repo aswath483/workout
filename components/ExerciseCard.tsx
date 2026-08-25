@@ -6,6 +6,7 @@ import type { Level } from '@/app/page';
 import RestTimer from './RestTimer';
 import ExerciseAnimation, { EXERCISE_ANIMATION } from './ExerciseAnimation';
 import WeightLogger from './WeightLogger';
+import type { ProfileId } from '@/lib/profiles';
 
 interface Props {
   exercise: ExerciseInfo;
@@ -16,6 +17,7 @@ interface Props {
   onCheckedChange: (key: string, value: boolean) => void;
   restMultiplier: number;
   level: Level;
+  profileId: ProfileId;
   onRemove?: () => void;
 }
 
@@ -33,7 +35,7 @@ const PHASE_COLORS = {
   3: { badge: 'bg-[#7f1d1d] text-[#f87171]', ring: '#f87171', label: 'P3' },
 };
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, onRemove }: Props) {
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
@@ -285,6 +287,7 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
               exerciseKey={allSetsKey}
               exerciseName={exercise.name}
               suggestedWeight={exercise.weight}
+              profileId={profileId}
             />
           </div>
         )}

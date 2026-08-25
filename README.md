@@ -29,14 +29,33 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Profiles
+
+The app supports exactly two fixed profiles (`lib/profiles.ts`): **Aswath** and
+**Surekaa**. Each person's data (checked exercises, completed sessions, streak,
+custom exercises, level, session notes, body weight log, per-exercise weight
+logs) is fully independent — stored in `localStorage` under a `wk_{profileId}_*`
+prefix, and synced to its own Firestore document when cloud sync is configured
+(see below).
+
+- **First launch on a device** asks "Who's tracking?" — pick your name once and
+  it's remembered on that device.
+- The profile pill in the header switches which profile you're **viewing**.
+  Viewing your own profile is fully editable; viewing the other person's is
+  **read-only** — you see their progress but can't check things off, log
+  weight, or change anything for them.
+- "Not you? Reset identity" in the profile switcher clears the device's saved
+  identity and shows the picker again (useful if set up on the wrong device).
+
 ## Cloud sync (Firebase)
 
-All app state (checked exercises, completed sessions, streak, custom exercises,
-level, session notes, body weight log, per-exercise weight logs) lives in
-`localStorage` under `wk_*` keys. If Firebase env vars are set, it's also synced
-to Firestore automatically — same keys, no extra wiring — so progress survives a
-cleared browser or a new device (signed in anonymously, one document per device).
-Without the env vars below, the app works exactly as before (localStorage-only).
+If Firebase env vars are set, each profile's `wk_{profileId}_*` state is synced
+to its own Firestore document (`appState/aswath`, `appState/surekaa`) — same
+keys, no extra wiring. That's what makes cross-device viewing work: switching
+to the other person's profile pulls their latest data from Firestore, even on
+a device that's never seen it before. Without the env vars below, the app
+works exactly as before (localStorage-only, profiles still independent but
+not synced anywhere).
 
 Add a Firebase project's web app config as env vars (`.env.local` for dev, and in
 the Vercel project settings for the deployment):
@@ -51,22 +70,25 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
 In the Firebase console, enable **Authentication → Sign-in method → Anonymous**
-and create a **Firestore** database. Lock it down with rules so each device can
-only read/write its own document:
+(used only to satisfy Firestore's `request.auth != null` — either of you can
+read/write either profile's doc, since you're both trusted) and create a
+**Firestore** database. Lock it down to just the two known profile docs:
 
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /appState/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    match /appState/{profileId} {
+      allow read, write: if request.auth != null
+        && profileId in ['aswath', 'surekaa'];
     }
   }
 }
 ```
 
-Any future state should keep writing to `localStorage` with a `wk_` prefix
-(`lib/cloudSync.ts`) — it'll be picked up and synced without further changes.
+Any future state should keep writing to `localStorage` via `profileKey()`
+(`lib/profiles.ts`) so it stays namespaced per profile — it'll be picked up
+and synced by `lib/cloudSync.ts` without further changes.
 
 ## Deploy on Vercel
 

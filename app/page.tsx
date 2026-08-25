@@ -5,8 +5,8 @@ import ProgressScreen from '@/components/ProgressScreen';
 import TipsScreen from '@/components/TipsScreen';
 import BottomNav from '@/components/BottomNav';
 import type { ExerciseInfo } from '@/data/workoutData';
-import { initCloudSync } from '@/lib/cloudSync';
-import { isFirebaseConfigured } from '@/lib/firebase';
+import { syncProfile } from '@/lib/cloudSync';
+import { PROFILES, isProfileId, profileKey, profileLabel, type ProfileId } from '@/lib/profiles';
 
 type Screen = 'workout' | 'progress' | 'tips';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
@@ -32,22 +32,26 @@ export const LEVEL_CONFIG: Record<Level, { label: string; desc: string; restMult
   },
 };
 
-function useLocalStorage<T>(key: string, initial: T) {
+const MY_PROFILE_KEY = 'wk_my_profile_id';
+const VIEWING_PROFILE_KEY = 'wk_viewing_profile_id';
+
+function useLocalStorage<T>(profileId: ProfileId, key: string, initial: T) {
+  const storageKey = profileKey(profileId, key);
   const [value, setValue] = useState<T>(initial);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(key);
+      const stored = localStorage.getItem(storageKey);
       if (stored !== null) setValue(JSON.parse(stored));
     } catch {}
     setLoaded(true);
-  }, [key]);
+  }, [storageKey]);
 
   const set = (v: T | ((prev: T) => T)) => {
     setValue((prev) => {
       const next = typeof v === 'function' ? (v as (p: T) => T)(prev) : v;
-      try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
+      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
       return next;
     });
   };
@@ -65,14 +69,23 @@ function todayStr() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function WorkoutApp() {
+interface WorkoutAppProps {
+  profileId: ProfileId;
+  readOnly: boolean;
+  viewerLabel: string;
+  onSwitchProfile: (id: ProfileId) => void;
+  onResetIdentity: () => void;
+}
+
+function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onResetIdentity }: WorkoutAppProps) {
   const [screen, setScreen] = useState<Screen>('workout');
   const [showLevelPicker, setShowLevelPicker] = useState(false);
-  const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>('wk_checked', {});
-  const [completedSessions, setCompletedSessions, sessionsLoaded] = useLocalStorage<number[]>('wk_sessions_done', []);
-  const [customExercises, setCustomExercises, customLoaded] = useLocalStorage<Record<string, ExerciseInfo[]>>('wk_custom', {});
-  const [level, setLevel, levelLoaded] = useLocalStorage<Level>('wk_level', 'beginner');
-  const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>('wk_streak', { count: 0, lastDate: '' });
+  const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
+  const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>(profileId, 'checked', {});
+  const [completedSessions, setCompletedSessions, sessionsLoaded] = useLocalStorage<number[]>(profileId, 'sessions_done', []);
+  const [customExercises, setCustomExercises, customLoaded] = useLocalStorage<Record<string, ExerciseInfo[]>>(profileId, 'custom', {});
+  const [level, setLevel, levelLoaded] = useLocalStorage<Level>(profileId, 'level', 'beginner');
+  const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>(profileId, 'streak', { count: 0, lastDate: '' });
 
   const handleCheckedChange = (key: string, value: boolean) => {
     setChecked((prev) => ({ ...prev, [key]: value }));
@@ -127,17 +140,18 @@ function WorkoutApp() {
   const cfg = LEVEL_CONFIG[level];
 
   return (
-    <div className="bg-[#0f0f0f] min-h-screen text-[#f1f1f1] pb-20">
+    <div className="bg-[#0f0f0f] min-h-screen text-[#f1f1f1] pb-20 max-w-md mx-auto">
       <header className="sticky top-0 z-50 bg-[#1a1a1a] border-b border-[#2a2a2a] px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
             <h1 className="font-bold text-[17px] tracking-tight">12-Week Transformation</h1>
             <p className="text-[12px] text-[#888] mt-0.5">
-              {screen === 'workout' ? 'Fat Loss · Muscle · Toned Look' :
+              {readOnly ? `Viewing ${viewerLabel}'s progress · read-only` :
+               screen === 'workout' ? 'Fat Loss · Muscle · Toned Look' :
                screen === 'progress' ? 'Track Your Journey' : 'Nutrition & Recovery Guide'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {streak.count > 0 && (
               <div className="flex items-center gap-1 bg-[#713f12]/60 border border-[#facc15]/30 rounded-xl px-2.5 py-1.5">
                 <span className="text-sm">🔥</span>
@@ -145,19 +159,70 @@ function WorkoutApp() {
               </div>
             )}
             <button
-              onClick={() => setShowLevelPicker(true)}
-              className="flex items-center gap-1.5 bg-[#2a2a2a] rounded-xl px-3 py-2"
+              onClick={() => setShowProfileSwitcher(true)}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 ${readOnly ? 'bg-[#713f12]/60 border border-[#facc15]/30' : 'bg-[#2a2a2a]'}`}
             >
-              <span className={`text-[11px] font-bold ${cfg.color}`}>{cfg.label}</span>
+              <span className={`text-[11px] font-bold ${readOnly ? 'text-[#facc15]' : 'text-white'}`}>{viewerLabel}</span>
               <svg className="w-3 h-3 text-[#888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
+            {!readOnly && (
+              <button
+                onClick={() => setShowLevelPicker(true)}
+                className="flex items-center gap-1.5 bg-[#2a2a2a] rounded-xl px-3 py-2"
+              >
+                <span className={`text-[11px] font-bold ${cfg.color}`}>{cfg.label}</span>
+                <svg className="w-3 h-3 text-[#888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {showLevelPicker && (
+      {showProfileSwitcher && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+             onClick={() => setShowProfileSwitcher(false)}>
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
+               onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-white font-bold text-lg mb-1">Switch Profile</h2>
+            <p className="text-[#888] text-sm mb-5">
+              Viewing someone else&apos;s profile is read-only — you can see their progress but can&apos;t change it.
+            </p>
+            <div className="space-y-3">
+              {PROFILES.map((p) => {
+                const isActive = p.id === profileId;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => { onSwitchProfile(p.id); setShowProfileSwitcher(false); }}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all ${
+                      isActive ? 'border-[#555] bg-[#222]' : 'border-[#2a2a2a] bg-[#111]'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <p className="font-bold text-sm text-white">{p.label}</p>
+                    </div>
+                    {isActive && <span className="text-[#4ade80] text-lg">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setShowProfileSwitcher(false)}
+              className="w-full mt-4 py-3 rounded-2xl bg-[#2a2a2a] text-white font-semibold text-sm">
+              Done
+            </button>
+            <button onClick={() => { setShowProfileSwitcher(false); onResetIdentity(); }}
+              className="w-full mt-2 py-2.5 text-[#666] text-xs">
+              Not you? Reset identity
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showLevelPicker && !readOnly && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowLevelPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
@@ -210,52 +275,129 @@ function WorkoutApp() {
         </div>
       )}
 
-      {screen === 'workout' && (
-        <WorkoutScreen
-          checked={checked}
-          onCheckedChange={handleCheckedChange}
-          restMultiplier={cfg.restMultiplier}
-          level={level}
-          completedSessions={completedSessions}
-          onSessionComplete={handleSessionComplete}
-          customExercises={customExercises}
-          onAddCustomExercise={handleAddCustomExercise}
-          onRemoveCustomExercise={handleRemoveCustomExercise}
-          streak={streak}
-        />
-      )}
-      {screen === 'progress' && (
-        <ProgressScreen
-          completedSessions={completedSessions}
-          onReset={handleReset}
-        />
-      )}
-      {screen === 'tips' && <TipsScreen />}
+      <div className={readOnly ? 'pointer-events-none' : undefined}>
+        {screen === 'workout' && (
+          <WorkoutScreen
+            checked={checked}
+            onCheckedChange={handleCheckedChange}
+            restMultiplier={cfg.restMultiplier}
+            level={level}
+            completedSessions={completedSessions}
+            onSessionComplete={handleSessionComplete}
+            customExercises={customExercises}
+            onAddCustomExercise={handleAddCustomExercise}
+            onRemoveCustomExercise={handleRemoveCustomExercise}
+            streak={streak}
+            profileId={profileId}
+          />
+        )}
+        {screen === 'progress' && (
+          <ProgressScreen
+            completedSessions={completedSessions}
+            onReset={handleReset}
+            profileId={profileId}
+          />
+        )}
+        {screen === 'tips' && <TipsScreen />}
+      </div>
 
       <BottomNav active={screen} onChange={setScreen} />
     </div>
   );
 }
 
+function IdentityPicker({ onChoose }: { onChoose: (id: ProfileId) => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f0f] px-6 text-center">
+      <h1 className="text-white font-bold text-xl mb-2">Who&apos;s tracking?</h1>
+      <p className="text-[#888] text-sm mb-8">Pick your profile — your progress stays separate from theirs.</p>
+      <div className="w-full max-w-sm space-y-3">
+        {PROFILES.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => onChoose(p.id)}
+            className="w-full py-4 rounded-2xl border border-[#2a2a2a] bg-[#1a1a1a] text-white font-bold text-base active:scale-95 transition-transform"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
+      <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 export default function App() {
-  // When Firebase isn't configured yet, this stays true from the start and behaves
-  // exactly like before (localStorage-only). Once configured, we wait for the initial
-  // cloud pull to merge into localStorage before mounting WorkoutApp, so its state
-  // hooks read the synced data on their first pass instead of racing the network.
-  const [cloudReady, setCloudReady] = useState(!isFirebaseConfigured);
+  const [myProfileId, setMyProfileId] = useState<ProfileId | null>(null);
+  const [viewingProfileId, setViewingProfileId] = useState<ProfileId | null>(null);
+  const [identityLoaded, setIdentityLoaded] = useState(false);
+  const [syncedProfileId, setSyncedProfileId] = useState<ProfileId | null>(null);
 
   useEffect(() => {
-    if (!isFirebaseConfigured) return;
-    initCloudSync().finally(() => setCloudReady(true));
+    try {
+      const storedMe = localStorage.getItem(MY_PROFILE_KEY);
+      const storedViewing = localStorage.getItem(VIEWING_PROFILE_KEY);
+      if (isProfileId(storedMe)) {
+        setMyProfileId(storedMe);
+        setViewingProfileId(isProfileId(storedViewing) ? storedViewing : storedMe);
+      }
+    } catch {}
+    setIdentityLoaded(true);
   }, []);
 
-  if (!cloudReady) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
-        <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!myProfileId || !viewingProfileId) return;
+    let cancelled = false;
+    syncProfile(viewingProfileId, viewingProfileId === myProfileId).finally(() => {
+      if (!cancelled) setSyncedProfileId(viewingProfileId);
+    });
+    return () => { cancelled = true; };
+  }, [myProfileId, viewingProfileId]);
 
-  return <WorkoutApp />;
+  const cloudReady = syncedProfileId === viewingProfileId;
+
+  const chooseIdentity = (id: ProfileId) => {
+    try {
+      localStorage.setItem(MY_PROFILE_KEY, id);
+      localStorage.setItem(VIEWING_PROFILE_KEY, id);
+    } catch {}
+    setMyProfileId(id);
+    setViewingProfileId(id);
+  };
+
+  const switchProfile = (id: ProfileId) => {
+    try { localStorage.setItem(VIEWING_PROFILE_KEY, id); } catch {}
+    setViewingProfileId(id);
+  };
+
+  const resetIdentity = () => {
+    try {
+      localStorage.removeItem(MY_PROFILE_KEY);
+      localStorage.removeItem(VIEWING_PROFILE_KEY);
+    } catch {}
+    setMyProfileId(null);
+    setViewingProfileId(null);
+  };
+
+  if (!identityLoaded) return <Spinner />;
+  if (!myProfileId || !viewingProfileId) return <IdentityPicker onChoose={chooseIdentity} />;
+  if (!cloudReady) return <Spinner />;
+
+  return (
+    <WorkoutApp
+      key={viewingProfileId}
+      profileId={viewingProfileId}
+      readOnly={viewingProfileId !== myProfileId}
+      viewerLabel={profileLabel(viewingProfileId)}
+      onSwitchProfile={switchProfile}
+      onResetIdentity={resetIdentity}
+    />
+  );
 }

@@ -7,6 +7,7 @@ import {
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
 import type { Level, StreakData } from '@/app/page';
+import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface Props {
   checked: Record<string, boolean>;
@@ -19,6 +20,7 @@ interface Props {
   onAddCustomExercise: (sessionNum: number, ex: ExerciseInfo) => void;
   onRemoveCustomExercise: (sessionNum: number, exName: string) => void;
   streak: StreakData;
+  profileId: ProfileId;
 }
 
 type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
@@ -49,22 +51,22 @@ export interface SessionNote {
   date: string;
 }
 
-function readNotes(): Record<number, SessionNote> {
+function readNotes(profileId: ProfileId): Record<number, SessionNote> {
   if (typeof window === 'undefined') return {};
-  try { return JSON.parse(localStorage.getItem('wk_session_notes') || '{}'); } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(profileKey(profileId, 'session_notes')) || '{}'); } catch { return {}; }
 }
 
-function saveNote(sessionNum: number, entry: SessionNote) {
-  const all = readNotes();
+function saveNote(profileId: ProfileId, sessionNum: number, entry: SessionNote) {
+  const all = readNotes(profileId);
   all[sessionNum] = entry;
-  try { localStorage.setItem('wk_session_notes', JSON.stringify(all)); } catch {}
+  try { localStorage.setItem(profileKey(profileId, 'session_notes'), JSON.stringify(all)); } catch {}
 }
 
 export default function WorkoutScreen({
   checked, onCheckedChange, restMultiplier, level,
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
-  streak,
+  streak, profileId,
 }: Props) {
   const [activeSession, setActiveSession] = useState<number | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
@@ -90,6 +92,7 @@ export default function WorkoutScreen({
         libraryFilter={libraryFilter}
         setLibraryFilter={setLibraryFilter}
         streak={streak}
+        profileId={profileId}
         onBack={() => setActiveSession(null)}
       />
     );
@@ -145,7 +148,7 @@ export default function WorkoutScreen({
         const c = PHASE_COLORS[ph];
         const phaseSessions = SESSIONS.filter(s => s.phase === ph);
         const donePh = phaseSessions.filter(s => completedSessions.includes(s.sessionNum)).length;
-        const notes = readNotes();
+        const notes = readNotes(profileId);
         return (
           <div key={ph} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
             {/* Phase header */}
@@ -236,7 +239,7 @@ function SessionDetail({
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
   showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
-  streak, onBack,
+  streak, onBack, profileId,
 }: DetailProps) {
   const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
   const phaseData = PHASES[session.phase];
@@ -251,11 +254,11 @@ function SessionDetail({
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [selectedMood, setSelectedMood] = useState('');
   const [noteText, setNoteText] = useState('');
-  const [savedNote, setSavedNote] = useState<SessionNote | null>(() => readNotes()[sessionNum] ?? null);
+  const [savedNote, setSavedNote] = useState<SessionNote | null>(() => readNotes(profileId)[sessionNum] ?? null);
 
   const handleSaveNote = () => {
     const entry: SessionNote = { mood: selectedMood, note: noteText.trim(), date: new Date().toISOString() };
-    saveNote(sessionNum, entry);
+    saveNote(profileId, sessionNum, entry);
     setSavedNote(entry);
     setShowNoteModal(false);
     onSessionComplete(sessionNum);
@@ -491,6 +494,7 @@ function SessionDetail({
                   onCheckedChange={onCheckedChange}
                   restMultiplier={restMultiplier}
                   level={level}
+                  profileId={profileId}
                 />
               ))}
 
@@ -508,6 +512,7 @@ function SessionDetail({
                       onCheckedChange={onCheckedChange}
                       restMultiplier={restMultiplier}
                       level={level}
+                      profileId={profileId}
                       onRemove={() => onRemoveCustomExercise(sessionNum, ex.name)}
                     />
                   ))}

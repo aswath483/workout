@@ -1,12 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface Entry {
   weight: number;  // kg
   date: string;    // YYYY-MM-DD
 }
 
-const STORAGE_KEY = 'wk_body_weight';
+interface Props {
+  profileId: ProfileId;
+}
 
 function todayISO() {
   const d = new Date();
@@ -68,7 +71,8 @@ function Sparkline({ entries }: { entries: Entry[] }) {
   );
 }
 
-export default function BodyWeightTracker() {
+export default function BodyWeightTracker({ profileId }: Props) {
+  const storageKey = profileKey(profileId, 'body_weight');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [input, setInput] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -76,15 +80,15 @@ export default function BodyWeightTracker() {
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem(STORAGE_KEY);
-      if (s) setEntries(JSON.parse(s));
+      const s = localStorage.getItem(storageKey);
+      setEntries(s ? JSON.parse(s) : []);
     } catch {}
     setLoaded(true);
-  }, []);
+  }, [storageKey]);
 
   const save = (updated: Entry[]) => {
     setEntries(updated);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch {}
+    try { localStorage.setItem(storageKey, JSON.stringify(updated)); } catch {}
   };
 
   const logWeight = () => {
