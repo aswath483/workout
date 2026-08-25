@@ -88,6 +88,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [level, setLevel, levelLoaded] = useLocalStorage<Level>(profileId, 'level', 'beginner');
   const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>(profileId, 'streak', { count: 0, lastDate: '' });
   const [painAreas, setPainAreas, painAreasLoaded] = useLocalStorage<PainArea[]>(profileId, 'pain_areas', []);
+  const [sessionDates, setSessionDates, sessionDatesLoaded] = useLocalStorage<Record<number, string>>(profileId, 'session_dates', {});
 
   const togglePainArea = (id: PainArea) => {
     setPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
@@ -101,6 +102,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
     if (completedSessions.includes(n)) return;
     setCompletedSessions((prev) => [...prev, n]);
     const today = todayStr();
+    setSessionDates((prev) => ({ ...prev, [n]: today }));
     setStreak((prev) => {
       const yesterday = (() => {
         const d = new Date(); d.setDate(d.getDate() - 1);
@@ -133,9 +135,10 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
     setCompletedSessions([]);
     setCustomExercises({});
     setStreak({ count: 0, lastDate: '' });
+    setSessionDates({});
   };
 
-  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded) {
+  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
         <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
@@ -353,6 +356,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
             completedSessions={completedSessions}
             onReset={handleReset}
             profileId={profileId}
+            sessionDates={sessionDates}
           />
         )}
         {screen === 'tips' && <TipsScreen />}

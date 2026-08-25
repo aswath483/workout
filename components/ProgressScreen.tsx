@@ -3,12 +3,14 @@ import { useState } from 'react';
 import { SESSIONS } from '@/data/workoutData';
 import { MOODS, type SessionNote } from './WorkoutScreen';
 import BodyWeightTracker from './BodyWeightTracker';
+import TrainingCalendar from './TrainingCalendar';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface Props {
   completedSessions: number[];
   onReset: () => void;
   profileId: ProfileId;
+  sessionDates: Record<number, string>;
 }
 
 const PHASE_META = [
@@ -23,9 +25,9 @@ const TYPE_COLOR: Record<string, string> = {
   cardio:   'text-[#4ade80]',
   hiit:     'text-[#facc15]',
 };
-const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_SHORT = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6'];
 
-export default function ProgressScreen({ completedSessions, onReset, profileId }: Props) {
+export default function ProgressScreen({ completedSessions, onReset, profileId, sessionDates }: Props) {
   const total = completedSessions.length;
   const nextSession = SESSIONS.find(s => !completedSessions.includes(s.sessionNum));
 
@@ -56,6 +58,9 @@ export default function ProgressScreen({ completedSessions, onReset, profileId }
     <div className="px-4 py-4 space-y-4">
       {/* Body Weight Tracker */}
       <BodyWeightTracker profileId={profileId} />
+
+      {/* Training Calendar */}
+      <TrainingCalendar sessionDates={sessionDates} />
 
       {/* Overall ring */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">

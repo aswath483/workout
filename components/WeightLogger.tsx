@@ -2,10 +2,13 @@
 import { useState, useEffect } from 'react';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 
+type Rpe = 'easy' | 'moderate' | 'hard';
+
 interface WeightLogEntry {
   weight: string;
   date: string;
   notes: string;
+  rpe?: Rpe;
 }
 
 interface Props {
@@ -15,18 +18,44 @@ interface Props {
   profileId: ProfileId;
 }
 
+const RPE_OPTIONS: { value: Rpe; emoji: string; label: string }[] = [
+  { value: 'easy', emoji: '😌', label: 'Easy' },
+  { value: 'moderate', emoji: '😐', label: 'Moderate' },
+  { value: 'hard', emoji: '😓', label: 'Hard' },
+];
+
+// Bumps the leading number in a weight string by 2.5 (e.g. "15 kg" -> "17.5 kg",
+// "5 kg each" -> "7.5 kg each"). Anything without a clear leading number (like
+// "Bodyweight") is returned unchanged rather than guessed at.
+function suggestNextWeight(lastWeight: string): string {
+  const match = lastWeight.match(/^(\d+(?:\.\d+)?)(.*)$/);
+  if (!match) return lastWeight;
+  return `${parseFloat(match[1]) + 2.5}${match[2]}`;
+}
+
 export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeight, profileId }: Props) {
   const storageKey = profileKey(profileId, `wlog_${exerciseKey}`);
   const [log, setLog] = useState<WeightLogEntry[]>([]);
   const [weight, setWeight] = useState('');
+  const [rpe, setRpe] = useState<Rpe | null>(null);
   const [notes, setNotes] = useState('');
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
+    let loaded: WeightLogEntry[] = [];
     try {
       const stored = localStorage.getItem(storageKey);
-      if (stored) setLog(JSON.parse(stored));
+      if (stored) loaded = JSON.parse(stored);
     } catch {}
+    setLog(loaded);
+
+    const [last, prev] = loaded;
+    const bothNotHard = last?.rpe !== 'hard' && prev?.rpe !== 'hard';
+    if (last && prev && last.weight.trim() === prev.weight.trim() && bothNotHard) {
+      setWeight(suggestNextWeight(last.weight));
+    } else if (last) {
+      setWeight(last.weight);
+    }
   }, [storageKey]);
 
   const save = () => {
@@ -35,21 +64,25 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
       weight: weight.trim(),
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
       notes: notes.trim(),
+      ...(rpe ? { rpe } : {}),
     };
     const updated = [entry, ...log].slice(0, 10); // keep last 10
     setLog(updated);
     try { localStorage.setItem(storageKey, JSON.stringify(updated)); } catch {}
-    setWeight('');
+    setRpe(null);
     setNotes('');
   };
 
   const lastEntry = log[0];
   const prevEntry = log[1];
 
-  // Two most recent logs at the same weight → the classic "completed it easily twice
-  // in a row" progression signal (same rule as the Progress screen's weight rule).
+  // Two most recent logs at the same weight, neither logged as "hard" → the classic
+  // "completed it easily twice in a row" progression signal (same rule as the Progress
+  // screen's weight rule). Entries logged before RPE existed count as eligible.
   const readyToProgress = Boolean(
-    lastEntry && prevEntry && lastEntry.weight.trim() === prevEntry.weight.trim()
+    lastEntry && prevEntry &&
+    lastEntry.weight.trim() === prevEntry.weight.trim() &&
+    lastEntry.rpe !== 'hard' && prevEntry.rpe !== 'hard'
   );
 
   const weightDiff = lastEntry && prevEntry
@@ -80,7 +113,10 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
         <div className="flex items-center gap-3">
           <div className="flex-1 bg-[#1a1a1a] rounded-xl p-3">
             <p className="text-[10px] text-[#888]">Last session</p>
-            <p className="text-white font-bold text-base">{lastEntry.weight}</p>
+            <p className="text-white font-bold text-base">
+              {lastEntry.weight}
+              {lastEntry.rpe && <span className="ml-1.5 text-sm align-middle">{RPE_OPTIONS.find(r => r.value === lastEntry.rpe)?.emoji}</span>}
+            </p>
             <p className="text-[10px] text-[#888] mt-0.5">{lastEntry.date}</p>
           </div>
           {weightDiff !== null && (
@@ -97,7 +133,7 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
       {readyToProgress && (
         <div className="bg-[#14532d]/30 border border-[#14532d] rounded-xl p-3">
           <p className="text-[12px] text-[#4ade80] leading-relaxed">
-            💪 Same weight on {exerciseName} 2 sessions in a row — try +2.5kg (or +1 rep) next time.
+            💪 Same weight on {exerciseName} 2 sessions in a row, not marked hard — try +2.5kg (or +1 rep) next time. It'll be pre-filled when you come back to this exercise.
           </p>
         </div>
       )}
@@ -107,6 +143,20 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
           Suggested: <span className="text-white font-semibold">{suggestedWeight}</span> — log what you actually used after each session.
         </p>
       )}
+
+      <div className="flex gap-1.5">
+        {RPE_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setRpe(rpe === opt.value ? null : opt.value)}
+            className={`flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border text-xs font-semibold transition-all ${
+              rpe === opt.value ? 'border-white bg-white/10 text-white' : 'border-[#2a2a2a] bg-[#1a1a1a] text-[#888]'
+            }`}
+          >
+            <span>{opt.emoji}</span>{opt.label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex gap-2">
         <input
@@ -141,6 +191,7 @@ export default function WeightLogger({ exerciseKey, exerciseName, suggestedWeigh
             <div key={i} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-3 py-2">
               <div>
                 <span className="text-white text-sm font-semibold">{entry.weight}</span>
+                {entry.rpe && <span className="ml-1.5 text-xs">{RPE_OPTIONS.find(r => r.value === entry.rpe)?.emoji}</span>}
                 {entry.notes && <span className="text-[#888] text-xs ml-2">— {entry.notes}</span>}
               </div>
               <span className="text-[#888] text-[11px]">{entry.date}</span>

@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import {
-  SESSIONS, PHASES, EXERCISE_LIBRARY,
+  SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS,
   type ExerciseInfo, type PainArea,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
@@ -46,6 +46,14 @@ export const MOODS = [
   { emoji: '😤', label: 'Hard',    value: 'hard' },
   { emoji: '💀', label: 'Brutal',  value: 'brutal' },
   { emoji: '🤒', label: 'Off Day', value: 'offday' },
+];
+
+const WARMUP_ITEMS = [
+  '5 min light cardio (jog, jump rope, or brisk walk) — get your heart rate up',
+  'Arm circles — 10 each direction, both arms',
+  'Hip circles — 10 each direction',
+  'Bodyweight squats — 10 slow reps',
+  'Walking lunges — 5 steps each leg',
 ];
 
 export interface SessionNote {
@@ -254,8 +262,20 @@ function SessionDetail({
   const customs = customExercises[sessionKey] ?? [];
   const rawBaseExercises = Array.isArray(dayData) ? dayData : [];
   const variedBaseExercises = applyWeeklyVariation(rawBaseExercises, session.weekInPhase);
-  const baseExercises = applyDeload(adaptExercisesForPain(variedBaseExercises, painAreas), session.weekInPhase);
-  const adaptedCustoms = applyDeload(adaptExercisesForPain(customs, painAreas), session.weekInPhase);
+
+  // "Feeling off today?" — a same-visit-only pain flag on top of the persistent
+  // settings toggle, for a one-off ache that doesn't warrant a standing setting.
+  const [todayPainAreas, setTodayPainAreas] = useState<PainArea[]>([]);
+  const toggleTodayPain = (id: PainArea) => {
+    setTodayPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
+  };
+  const effectivePainAreas = Array.from(new Set([...painAreas, ...todayPainAreas]));
+
+  const baseExercises = applyDeload(adaptExercisesForPain(variedBaseExercises, effectivePainAreas), session.weekInPhase);
+  const adaptedCustoms = applyDeload(adaptExercisesForPain(customs, effectivePainAreas), session.weekInPhase);
+
+  const [warmupDone, setWarmupDone] = useState<boolean[]>(() => Array(WARMUP_ITEMS.length).fill(false));
+  const [warmupExpanded, setWarmupExpanded] = useState(true);
 
   // Note / mood state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -440,6 +460,29 @@ function SessionDetail({
             </div>
           </div>
 
+          {/* Feeling off today? — one-off pain flag, doesn't touch the persistent setting */}
+          {!isDone && (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-3">
+              <p className="text-[11px] text-[#888] mb-2">Feeling off today? Flag it just for this session:</p>
+              <div className="flex gap-1.5 flex-wrap">
+                {PAIN_AREAS.map((area) => {
+                  const active = todayPainAreas.includes(area.id);
+                  return (
+                    <button
+                      key={area.id}
+                      onClick={() => toggleTodayPain(area.id)}
+                      className={`text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
+                        active ? 'bg-[#7f1d1d]/30 border-[#f87171] text-[#f87171]' : 'bg-[#111] border-[#2a2a2a] text-[#888]'
+                      }`}
+                    >
+                      {area.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Saved note for completed session */}
           {isDone && savedNote && (
             <div className="bg-[#111] border border-[#2a2a2a] rounded-2xl p-4">
@@ -461,6 +504,36 @@ function SessionDetail({
           {/* Strength session */}
           {session.type === 'strength' && (
             <div>
+              {!isDone && (
+                <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden mb-4">
+                  <button
+                    onClick={() => setWarmupExpanded(!warmupExpanded)}
+                    className="w-full flex items-center justify-between p-4"
+                  >
+                    <span className="text-sm font-bold text-white">
+                      🔥 Warm-up {warmupDone.every(Boolean) ? '· Done' : `· ${warmupDone.filter(Boolean).length}/${WARMUP_ITEMS.length}`}
+                    </span>
+                    <span className={`text-[#888] text-xs transition-transform ${warmupExpanded ? 'rotate-180' : ''}`}>▾</span>
+                  </button>
+                  {warmupExpanded && (
+                    <div className="px-4 pb-4 space-y-2">
+                      <p className="text-[11px] text-[#888] mb-1">Do this before your working sets — especially on a heavy day.</p>
+                      {WARMUP_ITEMS.map((item, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setWarmupDone((prev) => prev.map((v, idx) => (idx === i ? !v : v)))}
+                          className="w-full flex items-center gap-3 text-left"
+                        >
+                          <span className={`w-5 h-5 rounded-md border flex-shrink-0 flex items-center justify-center text-[11px] ${
+                            warmupDone[i] ? 'bg-[#4ade80] border-[#4ade80] text-black' : 'border-[#2a2a2a] text-transparent'
+                          }`}>✓</span>
+                          <span className={`text-[13px] leading-snug ${warmupDone[i] ? 'text-[#666] line-through' : 'text-[#ccc]'}`}>{item}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               {isDeloadWeek(session.weekInPhase) && (
                 <div className="bg-[#1e3a5f]/30 border border-[#1e3a5f] rounded-2xl p-3 mb-4">
                   <p className="text-[12px] text-[#60a5fa] leading-relaxed">
