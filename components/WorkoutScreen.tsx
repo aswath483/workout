@@ -2,15 +2,22 @@
 import { useState } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS,
-  type ExerciseInfo, type PainArea, type EquipmentItem,
+  type ExerciseInfo, type PainArea, type EquipmentItem, type HIITDay,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
-import type { Level, StreakData } from '@/app/page';
+import type { Level, Goal, StreakData } from '@/app/page';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 import { adaptExercisesForPain } from '@/lib/painAdaptation';
 import { adaptExercisesForEquipment } from '@/lib/equipmentAdaptation';
 import { applyWeeklyVariation, applyDeload, isDeloadWeek } from '@/lib/weeklyVariation';
+import { getFinisherExercises, applyNewToTraining } from '@/lib/goalAdaptation';
+import { adaptHiitExercises } from '@/lib/hiitAdaptation';
+
+const CARDIO_IMPACT_AREAS: PainArea[] = ['knee', 'lower_back'];
+function painAreaLabel(area: PainArea): string {
+  return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
+}
 
 interface Props {
   checked: Record<string, boolean>;
@@ -26,6 +33,8 @@ interface Props {
   profileId: ProfileId;
   painAreas: PainArea[];
   ownedEquipment: EquipmentItem[];
+  goal: Goal;
+  newToTraining: boolean;
 }
 
 type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
@@ -109,7 +118,7 @@ export default function WorkoutScreen({
   checked, onCheckedChange, restMultiplier, level,
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
-  streak, profileId, painAreas, ownedEquipment,
+  streak, profileId, painAreas, ownedEquipment, goal, newToTraining,
 }: Props) {
   const [activeSession, setActiveSession] = useState<number | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
@@ -132,6 +141,8 @@ export default function WorkoutScreen({
         onRemoveCustomExercise={onRemoveCustomExercise}
         painAreas={painAreas}
         ownedEquipment={ownedEquipment}
+        goal={goal}
+        newToTraining={newToTraining}
         showLibrary={showLibrary}
         setShowLibrary={setShowLibrary}
         libraryFilter={libraryFilter}
@@ -284,7 +295,7 @@ function SessionDetail({
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
   showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
-  streak, onBack, profileId, painAreas, ownedEquipment,
+  streak, onBack, profileId, painAreas, ownedEquipment, goal, newToTraining,
 }: DetailProps) {
   const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
   const phaseData = PHASES[session.phase];
@@ -304,8 +315,18 @@ function SessionDetail({
   };
   const effectivePainAreas = Array.from(new Set([...painAreas, ...todayPainAreas]));
 
-  const baseExercises = applyDeload(combineAdaptations(variedBaseExercises, ownedEquipment, effectivePainAreas), session.weekInPhase);
-  const adaptedCustoms = applyDeload(combineAdaptations(customs, ownedEquipment, effectivePainAreas), session.weekInPhase);
+  const baseExercises = applyDeload(
+    applyNewToTraining(combineAdaptations(variedBaseExercises, ownedEquipment, effectivePainAreas), session.phase, session.weekInPhase, newToTraining),
+    session.weekInPhase
+  );
+  const adaptedCustoms = applyDeload(
+    applyNewToTraining(combineAdaptations(customs, ownedEquipment, effectivePainAreas), session.phase, session.weekInPhase, newToTraining),
+    session.weekInPhase
+  );
+  const finisherExercises: CombinedAdapted[] = session.type === 'strength'
+    ? getFinisherExercises(goal).map((exercise) => ({ exercise }))
+    : [];
+  const allSessionExercises = [...baseExercises, ...adaptedCustoms, ...finisherExercises];
 
   const [warmupDone, setWarmupDone] = useState<boolean[]>(() => Array(WARMUP_ITEMS.length).fill(false));
   const [warmupExpanded, setWarmupExpanded] = useState(true);
@@ -325,7 +346,11 @@ function SessionDetail({
   };
 
   // Library: filter out exercises already in this session
-  const sessionExNames = new Set(baseExercises.map(e => e.exercise.name).concat(customs.map(e => e.name)));
+  const sessionExNames = new Set(
+    baseExercises.map(e => e.exercise.name)
+      .concat(customs.map(e => e.name))
+      .concat(finisherExercises.map(e => e.exercise.name))
+  );
   const libraryFiltered = EXERCISE_LIBRARY.filter(e =>
     (libraryFilter === 'all' || e.muscleGroup === libraryFilter) && !sessionExNames.has(e.name)
   );
@@ -578,18 +603,18 @@ function SessionDetail({
               <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4 mb-4">
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
-                    <p className="text-white font-bold text-lg">{baseExercises.length + adaptedCustoms.length}</p>
+                    <p className="text-white font-bold text-lg">{allSessionExercises.length}</p>
                     <p className="text-[10px] text-[#888] mt-0.5">Exercises</p>
                   </div>
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
                     <p className="text-white font-bold text-lg">
-                      {baseExercises.length > 0 ? Math.max(...baseExercises.map(e => e.exercise.sets)) : '—'}
+                      {allSessionExercises.length > 0 ? Math.max(...allSessionExercises.map(e => e.exercise.sets)) : '—'}
                     </p>
                     <p className="text-[10px] text-[#888] mt-0.5">Max Sets</p>
                   </div>
                   <div className="bg-[#0f0f0f] rounded-xl p-3">
                     <p className="text-white font-bold text-lg">
-                      ~{Math.round(baseExercises.reduce((acc, e) => acc + e.exercise.sets * (e.exercise.restSeconds / 60 + 0.75), 0))}m
+                      ~{Math.round(allSessionExercises.reduce((acc, e) => acc + e.exercise.sets * (e.exercise.restSeconds / 60 + 0.75), 0))}m
                     </p>
                     <p className="text-[10px] text-[#888] mt-0.5">Est. Time</p>
                   </div>
@@ -620,6 +645,7 @@ function SessionDetail({
                   restMultiplier={restMultiplier}
                   level={level}
                   profileId={profileId}
+                  defaultExpanded={newToTraining}
                 />
               ))}
 
@@ -643,7 +669,29 @@ function SessionDetail({
                       restMultiplier={restMultiplier}
                       level={level}
                       profileId={profileId}
+                      defaultExpanded={newToTraining}
                       onRemove={() => onRemoveCustomExercise(sessionNum, adapted.originalName ?? adapted.exercise.name)}
+                    />
+                  ))}
+                </>
+              )}
+
+              {finisherExercises.length > 0 && (
+                <>
+                  <p className="text-xs font-bold text-[#c084fc] uppercase tracking-widest mb-3 mt-2">🔥 Fat-Loss Finisher</p>
+                  {finisherExercises.map((adapted, i) => (
+                    <ExerciseCard
+                      key={`finisher-${i}-${adapted.exercise.name}`}
+                      exercise={adapted.exercise}
+                      phase={session.phase}
+                      sessionKey={`${sessionKey}-finisher`}
+                      exerciseIndex={i}
+                      checked={checked}
+                      onCheckedChange={onCheckedChange}
+                      restMultiplier={restMultiplier}
+                      level={level}
+                      profileId={profileId}
+                      defaultExpanded={newToTraining}
                     />
                   ))}
                 </>
@@ -661,15 +709,39 @@ function SessionDetail({
           )}
 
           {/* HIIT session */}
-          {session.type === 'hiit' && Array.isArray(dayData) === false && !Array.isArray(dayData) && (dayData as { type: string }).type === 'hiit' && (
-            <HIITTimer data={dayData as { type: 'hiit'; rounds: number; workSeconds: number; restSeconds: number; exercises: string[] }} />
-          )}
+          {session.type === 'hiit' && Array.isArray(dayData) === false && !Array.isArray(dayData) && (dayData as { type: string }).type === 'hiit' && (() => {
+            const hiitData = dayData as HIITDay;
+            const adaptedMoves = adaptHiitExercises(hiitData.exercises, effectivePainAreas);
+            const swappedMoves = adaptedMoves.filter((m) => m.swappedFor);
+            return (
+              <>
+                {swappedMoves.length > 0 && (
+                  <div className="bg-[#7f1d1d]/20 border border-[#f87171]/40 rounded-2xl p-3 mb-4">
+                    <p className="text-[12px] text-[#f87171] leading-relaxed">
+                      🩹 <span className="font-semibold">Adjusted for {painAreaLabel(swappedMoves[0].swappedFor!)} pain:</span>{' '}
+                      {swappedMoves.map((m) => `${m.original} → ${m.name}`).join(', ')}. Same work/rest timing.
+                    </p>
+                  </div>
+                )}
+                <HIITTimer data={{ ...hiitData, exercises: adaptedMoves.map((m) => m.name) }} />
+              </>
+            );
+          })()}
 
           {/* Cardio session */}
           {session.type === 'cardio' && !Array.isArray(dayData) && (dayData as { type: string }).type === 'cardio' && (() => {
             const cd = dayData as { type: 'cardio'; duration: string; pace: string; items: string[] };
+            const flaggedCardioArea = CARDIO_IMPACT_AREAS.find((a) => effectivePainAreas.includes(a));
             return (
               <div className="space-y-3">
+                {flaggedCardioArea && (
+                  <div className="bg-[#7f1d1d]/20 border border-[#f87171]/40 rounded-2xl p-3">
+                    <p className="text-[12px] text-[#f87171] leading-relaxed">
+                      🩹 <span className="font-semibold">{painAreaLabel(flaggedCardioArea)} bothering you?</span>{' '}
+                      Swap the jog for cycling, swimming, or a brisk incline walk — same duration, same effort level, much less impact.
+                    </p>
+                  </div>
+                )}
                 <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">
                   <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Cardio Session</p>
                   <div className="grid grid-cols-2 gap-3 mb-4">

@@ -563,6 +563,14 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
   'Bench Dip':            ['shoulder', 'wrist'],
   'Bear Crawl':           ['wrist'],
   'Renegade Row':         ['wrist'],
+  'Pike Push-up':         ['shoulder', 'wrist'],
+  'Diamond Push-up':      ['wrist', 'elbow'],
+  'Band Overhead Press':  ['shoulder'],
+  'Band Bicep Curl':      ['elbow'],
+  'Single-Leg Romanian Deadlift': ['knee', 'lower_back'],
+  'Band Squat':           ['knee'],
+  'Band Deadlift':        ['knee', 'lower_back'],
+  'Suryanamaskar':        ['lower_back', 'wrist'],
 };
 
 // For each strained exercise, which exercise (by name, from EXERCISE_LIBRARY) to swap
@@ -611,6 +619,12 @@ export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, s
   'Bench Dip':              { shoulder: 'Band Triceps Pushdown', wrist: 'Band Triceps Pushdown' },
   'Bear Crawl':             { wrist: 'Dead Bug' },
   'Renegade Row':           { wrist: 'Single-Arm Dumbbell Row' },
+  'Pike Push-up':           { shoulder: 'Band Chest Press', wrist: 'Band Chest Press' },
+  'Diamond Push-up':        { wrist: 'Band Chest Press', elbow: 'Band Triceps Pushdown' },
+  'Band Overhead Press':    { shoulder: 'Band Chest Press' },
+  'Single-Leg Romanian Deadlift': { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Band Squat':             { knee: 'Glute Bridge' },
+  'Band Deadlift':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
 };
 
 // ─── WEEKLY VARIATION ────────────────────────────────────────────────────────

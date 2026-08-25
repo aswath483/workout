@@ -11,6 +11,19 @@ interface Props {
   profileId: ProfileId;
 }
 
+// Shared with the goal/body-stats card so weight has one source of truth —
+// whatever was last logged here is what BMI/protein math uses elsewhere.
+export function readLatestWeight(profileId: ProfileId): number | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(profileKey(profileId, 'body_weight'));
+    const entries: Entry[] = raw ? JSON.parse(raw) : [];
+    return entries[0]?.weight ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

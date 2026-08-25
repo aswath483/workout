@@ -24,6 +24,7 @@ interface Props {
   caution?: PainArea;
   equipmentSwap?: boolean;
   equipmentCaution?: boolean;
+  defaultExpanded?: boolean;
 }
 
 const MUSCLE_COLORS: Record<string, string> = {
@@ -44,8 +45,8 @@ function painAreaLabel(area: PainArea): string {
   return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
 }
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution }: Props) {
-  const [expanded, setExpanded] = useState(false);
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution, defaultExpanded }: Props) {
+  const [expanded, setExpanded] = useState(defaultExpanded ?? false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
 

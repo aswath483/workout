@@ -7,9 +7,30 @@ import BottomNav from '@/components/BottomNav';
 import { PAIN_AREAS, EQUIPMENT_ITEMS, ALL_EQUIPMENT, type ExerciseInfo, type PainArea, type EquipmentItem } from '@/data/workoutData';
 import { syncProfile } from '@/lib/cloudSync';
 import { PROFILES, isProfileId, profileKey, profileLabel, type ProfileId } from '@/lib/profiles';
+import { readLatestWeight } from '@/components/BodyWeightTracker';
+import { calcBMI, bmiCategory, healthyWeightRange, safeWeeklyLossRange, proteinTargetRange } from '@/lib/bodyStats';
 
 type Screen = 'workout' | 'progress' | 'tips';
 export type Level = 'beginner' | 'intermediate' | 'advanced';
+export type Goal = 'recomp' | 'fatloss' | 'muscle';
+
+export const GOAL_CONFIG: Record<Goal, { label: string; short: string; desc: string }> = {
+  recomp: {
+    label: 'Recomposition',
+    short: 'Recomp',
+    desc: 'Lose fat and build muscle at the same time. Best default if you’re newer to training — no changes to the program, just steady consistency.',
+  },
+  fatloss: {
+    label: 'Fat Loss Focus',
+    short: 'Fat Loss',
+    desc: 'Prioritizes fat loss — adds a short finisher circuit to strength days and trims rest slightly for more work density.',
+  },
+  muscle: {
+    label: 'Build Muscle',
+    short: 'Muscle',
+    desc: 'Prioritizes strength and size. No changes to the program — progressive overload is already the right tool for this.',
+  },
+};
 
 export const LEVEL_CONFIG: Record<Level, { label: string; desc: string; restMultiplier: number; color: string }> = {
   beginner: {
@@ -83,6 +104,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
   const [showPainPicker, setShowPainPicker] = useState(false);
   const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
+  const [showGoalPicker, setShowGoalPicker] = useState(false);
   const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>(profileId, 'checked', {});
   const [completedSessions, setCompletedSessions, sessionsLoaded] = useLocalStorage<number[]>(profileId, 'sessions_done', []);
   const [customExercises, setCustomExercises, customLoaded] = useLocalStorage<Record<string, ExerciseInfo[]>>(profileId, 'custom', {});
@@ -91,6 +113,9 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [painAreas, setPainAreas, painAreasLoaded] = useLocalStorage<PainArea[]>(profileId, 'pain_areas', []);
   const [sessionDates, setSessionDates, sessionDatesLoaded] = useLocalStorage<Record<number, string>>(profileId, 'session_dates', {});
   const [ownedEquipment, setOwnedEquipment, equipmentLoaded] = useLocalStorage<EquipmentItem[]>(profileId, 'equipment', ALL_EQUIPMENT);
+  const [goal, setGoal, goalLoaded] = useLocalStorage<Goal>(profileId, 'goal', 'recomp');
+  const [heightCm, setHeightCm, heightLoaded] = useLocalStorage<number | null>(profileId, 'height_cm', null);
+  const [newToTraining, setNewToTraining, newToTrainingLoaded] = useLocalStorage<boolean>(profileId, 'new_to_training', false);
 
   const togglePainArea = (id: PainArea) => {
     setPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
@@ -98,6 +123,20 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
 
   const toggleEquipment = (id: EquipmentItem) => {
     setOwnedEquipment((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
+  };
+
+  const [latestWeight, setLatestWeight] = useState<number | null>(null);
+  useEffect(() => {
+    setLatestWeight(readLatestWeight(profileId));
+  }, [profileId, showGoalPicker]);
+
+  const [heightInput, setHeightInput] = useState('');
+  useEffect(() => {
+    setHeightInput(heightCm ? String(heightCm) : '');
+  }, [heightCm]);
+  const commitHeight = () => {
+    const cm = parseFloat(heightInput);
+    if (!isNaN(cm) && cm >= 100 && cm <= 250) setHeightCm(cm);
   };
 
   const handleCheckedChange = (key: string, value: boolean) => {
@@ -144,7 +183,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
     setSessionDates({});
   };
 
-  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded || !equipmentLoaded) {
+  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded || !equipmentLoaded || !goalLoaded || !heightLoaded || !newToTrainingLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full bg-[#0f0f0f]">
         <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
@@ -213,6 +252,16 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
               } ${readOnly ? 'opacity-50' : ''}`}
             >
               <span className="text-sm">🎒</span>
+            </button>
+            <button
+              onClick={() => !readOnly && setShowGoalPicker(true)}
+              disabled={readOnly}
+              title="Goal & body stats"
+              className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
+                goal !== 'recomp' || heightCm ? 'bg-[#581c87]/40 border border-[#c084fc]/40' : 'bg-[#2a2a2a]'
+              } ${readOnly ? 'opacity-50' : ''}`}
+            >
+              <span className="text-sm">🎯</span>
             </button>
           </div>
         </div>
@@ -303,6 +352,22 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
                 );
               })}
             </div>
+
+            <button
+              onClick={() => setNewToTraining(!newToTraining)}
+              className={`w-full flex items-center gap-3 p-4 rounded-2xl border text-left transition-all mt-4 ${
+                newToTraining ? 'border-[#c084fc] bg-[#581c87]/20' : 'border-[#2a2a2a] bg-[#111]'
+              }`}
+            >
+              <div className="flex-1">
+                <p className={`font-bold text-sm ${newToTraining ? 'text-[#c084fc]' : 'text-white'}`}>New to training?</p>
+                <p className="text-[#888] text-xs mt-0.5">
+                  Trims a set off every exercise for your first 2 weeks, and opens exercise cards already expanded so the how-to and animation show by default.
+                </p>
+              </div>
+              {newToTraining && <span className="text-[#c084fc] text-lg flex-shrink-0">✓</span>}
+            </button>
+
             <button onClick={() => setShowLevelPicker(false)}
               className="w-full mt-4 py-3 rounded-2xl bg-[#2a2a2a] text-white font-semibold text-sm">
               Done
@@ -389,6 +454,122 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
+      {showGoalPicker && !readOnly && (() => {
+        const bmi = heightCm && latestWeight ? calcBMI(latestWeight, heightCm) : null;
+        const category = bmi ? bmiCategory(bmi) : null;
+        const [healthyLo, healthyHi] = heightCm ? healthyWeightRange(heightCm) : [0, 0];
+        const [lossLo, lossHi] = latestWeight ? safeWeeklyLossRange(latestWeight) : [0, 0];
+        const [proteinLo, proteinHi] = latestWeight ? proteinTargetRange(latestWeight) : [0, 0];
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+               onClick={() => setShowGoalPicker(false)}>
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto"
+                 onClick={(e) => e.stopPropagation()}>
+              <h2 className="text-white font-bold text-lg mb-1">Goal & Body Stats</h2>
+              <p className="text-[#888] text-sm mb-5">
+                Pick what you&apos;re training toward — this adjusts your program&apos;s intensity, not just your info.
+              </p>
+
+              <div className="space-y-3 mb-5">
+                {(Object.keys(GOAL_CONFIG) as Goal[]).map((g) => {
+                  const c = GOAL_CONFIG[g];
+                  const isActive = goal === g;
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => setGoal(g)}
+                      className={`w-full flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${
+                        isActive ? 'border-[#c084fc] bg-[#581c87]/20' : 'border-[#2a2a2a] bg-[#111]'
+                      }`}
+                    >
+                      <div className="flex-1">
+                        <p className={`font-bold text-sm ${isActive ? 'text-[#c084fc]' : 'text-white'}`}>{c.label}</p>
+                        <p className="text-[#888] text-xs mt-1 leading-relaxed">{c.desc}</p>
+                      </div>
+                      {isActive && <span className="text-[#c084fc] text-lg flex-shrink-0 mt-0.5">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-2xl p-4 mb-3">
+                <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">Your Height</p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={heightInput}
+                    onChange={(e) => setHeightInput(e.target.value)}
+                    onBlur={commitHeight}
+                    onKeyDown={(e) => e.key === 'Enter' && commitHeight()}
+                    placeholder="Height in cm (e.g. 165)"
+                    className="flex-1 bg-[#111] border border-[#2a2a2a] rounded-xl px-3 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-[#444]"
+                  />
+                  <button onClick={commitHeight}
+                    className="px-4 py-2.5 rounded-xl bg-[#c084fc] text-black font-bold text-sm">
+                    Save
+                  </button>
+                </div>
+                {!latestWeight && (
+                  <p className="text-[11px] text-[#666] mt-3 leading-relaxed">
+                    Log your weight in the Progress tab&apos;s Body Weight tracker to see your BMI and targets below.
+                  </p>
+                )}
+              </div>
+
+              {bmi !== null && (
+                <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-2xl p-4 mb-3">
+                  <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-3">BMI & Healthy Range</p>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div className="bg-[#111] rounded-xl p-3 text-center">
+                      <p className="text-white font-bold text-lg">{bmi.toFixed(1)}</p>
+                      <p className="text-[10px] text-[#888] mt-0.5 capitalize">{category}</p>
+                    </div>
+                    <div className="bg-[#111] rounded-xl p-3 text-center">
+                      <p className="text-white font-bold text-sm">{healthyLo.toFixed(0)}–{healthyHi.toFixed(0)} kg</p>
+                      <p className="text-[10px] text-[#888] mt-0.5">Healthy range</p>
+                    </div>
+                  </div>
+                  {goal === 'fatloss' && (
+                    <p className="text-[11px] text-[#ccc] leading-relaxed">
+                      Safe pace: <span className="text-white font-semibold">{lossLo.toFixed(1)}–{lossHi.toFixed(1)} kg/week</span>.
+                      {' '}Over 12 weeks that&apos;s roughly <span className="text-white font-semibold">{(lossLo * 12).toFixed(1)}–{(lossHi * 12).toFixed(1)} kg</span> — an estimate, not a promise.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {latestWeight !== null && (
+                <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-2xl p-4 mb-3">
+                  <p className="text-xs text-[#888] uppercase tracking-widest font-semibold mb-2">Protein Target</p>
+                  <p className="text-white font-bold text-lg">{proteinLo.toFixed(0)}–{proteinHi.toFixed(0)} g/day</p>
+                  <p className="text-[11px] text-[#888] mt-1.5 leading-relaxed">
+                    {goal === 'fatloss'
+                      ? 'Keeps muscle while you\'re in a deficit — helps you lose fat, not muscle.'
+                      : 'Matters most for building muscle and recomposition — this is what the training actually gets used for.'}
+                  </p>
+                </div>
+              )}
+
+              {goal === 'recomp' && (
+                <p className="text-[11px] text-[#666] leading-relaxed mb-2">
+                  Recomposition is slower to show on the scale — fat down and muscle up can cancel out. Track the weights going up in your exercise log, not just body weight.
+                </p>
+              )}
+
+              <p className="text-[11px] text-[#666] leading-relaxed mb-4">
+                These are estimates based on general population data, not medical advice.
+              </p>
+
+              <button onClick={() => setShowGoalPicker(false)}
+                className="w-full py-3 rounded-2xl bg-[#2a2a2a] text-white font-semibold text-sm">
+                Done
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className={readOnly ? 'pointer-events-none' : undefined}>
         {screen === 'workout' && (
           <WorkoutScreen
@@ -404,6 +585,8 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
             streak={streak}
             painAreas={painAreas}
             ownedEquipment={ownedEquipment}
+            goal={goal}
+            newToTraining={newToTraining}
             profileId={profileId}
           />
         )}
