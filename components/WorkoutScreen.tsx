@@ -2,13 +2,14 @@
 import { useState } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS,
-  type ExerciseInfo, type PainArea,
+  type ExerciseInfo, type PainArea, type EquipmentItem,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
 import HIITTimer from './HIITTimer';
 import type { Level, StreakData } from '@/app/page';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 import { adaptExercisesForPain } from '@/lib/painAdaptation';
+import { adaptExercisesForEquipment } from '@/lib/equipmentAdaptation';
 import { applyWeeklyVariation, applyDeload, isDeloadWeek } from '@/lib/weeklyVariation';
 
 interface Props {
@@ -24,6 +25,7 @@ interface Props {
   streak: StreakData;
   profileId: ProfileId;
   painAreas: PainArea[];
+  ownedEquipment: EquipmentItem[];
 }
 
 type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
@@ -73,11 +75,41 @@ function saveNote(profileId: ProfileId, sessionNum: number, entry: SessionNote) 
   try { localStorage.setItem(profileKey(profileId, 'session_notes'), JSON.stringify(all)); } catch {}
 }
 
+interface CombinedAdapted {
+  exercise: ExerciseInfo;
+  swappedFor?: PainArea;
+  originalName?: string;
+  caution?: PainArea;
+  equipmentSwap?: boolean;
+  equipmentCaution?: boolean;
+}
+
+// Runs equipment adaptation first (swap for gear the profile actually owns), then pain
+// adaptation on the result (swap further if that gear-appropriate pick still strains an
+// active pain area), and merges both swap trails into one badge-ready object per slot.
+function combineAdaptations(exercises: ExerciseInfo[], ownedEquipment: EquipmentItem[], activePainAreas: PainArea[]): CombinedAdapted[] {
+  const eqAdapted = adaptExercisesForEquipment(exercises, ownedEquipment);
+  const painAdapted = adaptExercisesForPain(eqAdapted.map((e) => e.exercise), activePainAreas);
+  return exercises.map((raw, i) => {
+    const eq = eqAdapted[i];
+    const pain = painAdapted[i];
+    const anySwap = eq.swapped || !!pain.swappedFor;
+    return {
+      exercise: pain.exercise,
+      swappedFor: pain.swappedFor,
+      caution: pain.caution,
+      equipmentSwap: eq.swapped,
+      equipmentCaution: eq.caution,
+      originalName: anySwap ? raw.name : undefined,
+    };
+  });
+}
+
 export default function WorkoutScreen({
   checked, onCheckedChange, restMultiplier, level,
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
-  streak, profileId, painAreas,
+  streak, profileId, painAreas, ownedEquipment,
 }: Props) {
   const [activeSession, setActiveSession] = useState<number | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
@@ -99,6 +131,7 @@ export default function WorkoutScreen({
         onAddCustomExercise={onAddCustomExercise}
         onRemoveCustomExercise={onRemoveCustomExercise}
         painAreas={painAreas}
+        ownedEquipment={ownedEquipment}
         showLibrary={showLibrary}
         setShowLibrary={setShowLibrary}
         libraryFilter={libraryFilter}
@@ -251,7 +284,7 @@ function SessionDetail({
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
   showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
-  streak, onBack, profileId, painAreas,
+  streak, onBack, profileId, painAreas, ownedEquipment,
 }: DetailProps) {
   const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
   const phaseData = PHASES[session.phase];
@@ -271,8 +304,8 @@ function SessionDetail({
   };
   const effectivePainAreas = Array.from(new Set([...painAreas, ...todayPainAreas]));
 
-  const baseExercises = applyDeload(adaptExercisesForPain(variedBaseExercises, effectivePainAreas), session.weekInPhase);
-  const adaptedCustoms = applyDeload(adaptExercisesForPain(customs, effectivePainAreas), session.weekInPhase);
+  const baseExercises = applyDeload(combineAdaptations(variedBaseExercises, ownedEquipment, effectivePainAreas), session.weekInPhase);
+  const adaptedCustoms = applyDeload(combineAdaptations(customs, ownedEquipment, effectivePainAreas), session.weekInPhase);
 
   const [warmupDone, setWarmupDone] = useState<boolean[]>(() => Array(WARMUP_ITEMS.length).fill(false));
   const [warmupExpanded, setWarmupExpanded] = useState(true);
@@ -575,8 +608,10 @@ function SessionDetail({
                   key={`${i}-${adapted.exercise.name}`}
                   exercise={adapted.exercise}
                   swappedFor={adapted.swappedFor}
-                  originalName={adapted.original?.name}
+                  originalName={adapted.originalName}
                   caution={adapted.caution}
+                  equipmentSwap={adapted.equipmentSwap}
+                  equipmentCaution={adapted.equipmentCaution}
                   phase={session.phase}
                   sessionKey={sessionKey}
                   exerciseIndex={i}
@@ -596,8 +631,10 @@ function SessionDetail({
                       key={`custom-${i}-${adapted.exercise.name}`}
                       exercise={adapted.exercise}
                       swappedFor={adapted.swappedFor}
-                      originalName={adapted.original?.name}
+                      originalName={adapted.originalName}
                       caution={adapted.caution}
+                      equipmentSwap={adapted.equipmentSwap}
+                      equipmentCaution={adapted.equipmentCaution}
                       phase={session.phase}
                       sessionKey={`${sessionKey}-custom`}
                       exerciseIndex={i}
@@ -606,7 +643,7 @@ function SessionDetail({
                       restMultiplier={restMultiplier}
                       level={level}
                       profileId={profileId}
-                      onRemove={() => onRemoveCustomExercise(sessionNum, adapted.original?.name ?? adapted.exercise.name)}
+                      onRemove={() => onRemoveCustomExercise(sessionNum, adapted.originalName ?? adapted.exercise.name)}
                     />
                   ))}
                 </>

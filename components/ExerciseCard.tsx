@@ -22,6 +22,8 @@ interface Props {
   swappedFor?: PainArea;
   originalName?: string;
   caution?: PainArea;
+  equipmentSwap?: boolean;
+  equipmentCaution?: boolean;
 }
 
 const MUSCLE_COLORS: Record<string, string> = {
@@ -42,7 +44,7 @@ function painAreaLabel(area: PainArea): string {
   return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
 }
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution }: Props) {
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
@@ -121,6 +123,16 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
                 {caution && !swappedFor && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]" title="No safe swap known yet for this combination — go easy or skip it.">
                     ⚠️ Caution · {painAreaLabel(caution)}
+                  </span>
+                )}
+                {equipmentSwap && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#1e3a5f]/40 text-[#7dd3fc]" title={originalName ? `Swapped from ${originalName} — no gear needed` : 'No gear needed'}>
+                    🎒 Swapped · No equipment
+                  </span>
+                )}
+                {equipmentCaution && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]" title="No gear-free swap known yet — skip it or improvise.">
+                    ⚠️ Caution · Needs gear
                   </span>
                 )}
                 {onRemove && (

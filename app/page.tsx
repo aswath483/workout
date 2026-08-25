@@ -4,7 +4,7 @@ import WorkoutScreen from '@/components/WorkoutScreen';
 import ProgressScreen from '@/components/ProgressScreen';
 import TipsScreen from '@/components/TipsScreen';
 import BottomNav from '@/components/BottomNav';
-import { PAIN_AREAS, type ExerciseInfo, type PainArea } from '@/data/workoutData';
+import { PAIN_AREAS, EQUIPMENT_ITEMS, ALL_EQUIPMENT, type ExerciseInfo, type PainArea, type EquipmentItem } from '@/data/workoutData';
 import { syncProfile } from '@/lib/cloudSync';
 import { PROFILES, isProfileId, profileKey, profileLabel, type ProfileId } from '@/lib/profiles';
 
@@ -82,6 +82,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [showLevelPicker, setShowLevelPicker] = useState(false);
   const [showProfileSwitcher, setShowProfileSwitcher] = useState(false);
   const [showPainPicker, setShowPainPicker] = useState(false);
+  const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
   const [checked, setChecked, checkedLoaded] = useLocalStorage<Record<string, boolean>>(profileId, 'checked', {});
   const [completedSessions, setCompletedSessions, sessionsLoaded] = useLocalStorage<number[]>(profileId, 'sessions_done', []);
   const [customExercises, setCustomExercises, customLoaded] = useLocalStorage<Record<string, ExerciseInfo[]>>(profileId, 'custom', {});
@@ -89,9 +90,14 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>(profileId, 'streak', { count: 0, lastDate: '' });
   const [painAreas, setPainAreas, painAreasLoaded] = useLocalStorage<PainArea[]>(profileId, 'pain_areas', []);
   const [sessionDates, setSessionDates, sessionDatesLoaded] = useLocalStorage<Record<number, string>>(profileId, 'session_dates', {});
+  const [ownedEquipment, setOwnedEquipment, equipmentLoaded] = useLocalStorage<EquipmentItem[]>(profileId, 'equipment', ALL_EQUIPMENT);
 
   const togglePainArea = (id: PainArea) => {
     setPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
+  };
+
+  const toggleEquipment = (id: EquipmentItem) => {
+    setOwnedEquipment((prev) => (prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]));
   };
 
   const handleCheckedChange = (key: string, value: boolean) => {
@@ -138,7 +144,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
     setSessionDates({});
   };
 
-  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded) {
+  if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded || !equipmentLoaded) {
     return (
       <div className="flex items-center justify-center min-h-screen w-full bg-[#0f0f0f]">
         <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
@@ -197,6 +203,16 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
               } ${readOnly ? 'opacity-50' : ''}`}
             >
               <span className="text-sm">🩹</span>
+            </button>
+            <button
+              onClick={() => !readOnly && setShowEquipmentPicker(true)}
+              disabled={readOnly}
+              title="Your equipment"
+              className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
+                ownedEquipment.length < ALL_EQUIPMENT.length ? 'bg-[#1e3a5f]/40 border border-[#7dd3fc]/40' : 'bg-[#2a2a2a]'
+              } ${readOnly ? 'opacity-50' : ''}`}
+            >
+              <span className="text-sm">🎒</span>
             </button>
           </div>
         </div>
@@ -334,6 +350,45 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
+      {showEquipmentPicker && !readOnly && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+             onClick={() => setShowEquipmentPicker(false)}>
+          <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
+               onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-white font-bold text-lg mb-1">Your Equipment</h2>
+            <p className="text-[#888] text-sm mb-5">
+              Toggle what you actually own — exercises that need gear you don&apos;t have get swapped for a bodyweight or band alternative automatically. Same number of exercises, just gear you can use. Nothing selected? Everything defaults to bodyweight and Suryanamaskar.
+            </p>
+            <div className="space-y-3">
+              {EQUIPMENT_ITEMS.map((item) => {
+                const isActive = ownedEquipment.includes(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => toggleEquipment(item.id)}
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border text-left transition-all ${
+                      isActive ? 'border-[#7dd3fc] bg-[#1e3a5f]/20' : 'border-[#2a2a2a] bg-[#111]'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <p className={`font-bold text-sm ${isActive ? 'text-[#7dd3fc]' : 'text-white'}`}>{item.label}</p>
+                    </div>
+                    {isActive && <span className="text-[#7dd3fc] text-lg">✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-[#666] leading-relaxed mt-4">
+              Bodyweight exercises (pushups, Suryanamaskar, planks, etc.) are always available regardless of what&apos;s toggled here.
+            </p>
+            <button onClick={() => setShowEquipmentPicker(false)}
+              className="w-full mt-4 py-3 rounded-2xl bg-[#2a2a2a] text-white font-semibold text-sm">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className={readOnly ? 'pointer-events-none' : undefined}>
         {screen === 'workout' && (
           <WorkoutScreen
@@ -348,6 +403,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
             onRemoveCustomExercise={handleRemoveCustomExercise}
             streak={streak}
             painAreas={painAreas}
+            ownedEquipment={ownedEquipment}
             profileId={profileId}
           />
         )}

@@ -150,6 +150,10 @@ export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
   'Superman':               ['Bodyweight'],
   'Bird Dog':               ['Bodyweight'],
   'Glute Bridge':           ['Bodyweight'],
+  'Pike Push-up':           ['Bodyweight'],
+  'Diamond Push-up':        ['Bodyweight'],
+  'Single-Leg Romanian Deadlift': ['Bodyweight'],
+  'Suryanamaskar':          ['Bodyweight'],
   // Resistance band
   'Clamshell':                    ['Resistance band'],
   'Standing Band Hip Abduction':  ['Resistance band'],
@@ -159,6 +163,11 @@ export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
   'Band Row':                     ['Resistance band'],
   'Band Chest Press':             ['Resistance band'],
   'Band Triceps Pushdown':        ['Resistance band'],
+  'Band Overhead Press':          ['Resistance band'],
+  'Band Bicep Curl':              ['Resistance band'],
+  'Band Shrugs':                  ['Resistance band'],
+  'Band Squat':                   ['Resistance band'],
+  'Band Deadlift':                ['Resistance band'],
   'Mountain Climbers':      ['Bodyweight'],
   // Skipping rope (HIIT cardio)
   'Sprints':                ['Skipping rope'],
@@ -266,6 +275,18 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Chest', 'Triceps', 'Shoulders'], muscleGroup: 'push',
     howTo: ['Hands shoulder-width apart or slightly wider, fingers forward', 'Lower chest to the floor — elbows at 45° from your body', 'Press back up to full arm extension', 'Keep body in a straight line — don\'t let hips sag', 'Do as many as you can with good form — stop when form breaks'],
     tip: 'This is a finisher — your chest and triceps are already fatigued. Push to your real limit.', youtubeQuery: 'pushup proper form chest beginner' },
+  { name: 'Pike Push-up', weight: 'Bodyweight', sets: 3, reps: '8–12', restSeconds: 75,
+    muscles: ['Shoulders', 'Triceps', 'Upper Chest'], muscleGroup: 'push',
+    howTo: ['Start in a downward-dog position, hips high, hands and feet on the floor', 'Bend elbows to lower the top of your head toward the floor', 'Elbows point back at about 45°, not flared out wide', 'Press back up through your hands to the starting position'],
+    tip: 'The higher your hips, the more this feels like an overhead press. Great shoulder builder with zero equipment.', youtubeQuery: 'pike push up proper form shoulders beginners' },
+  { name: 'Diamond Push-up', weight: 'Bodyweight', sets: 3, reps: '8–12', restSeconds: 75,
+    muscles: ['Triceps', 'Chest'], muscleGroup: 'push',
+    howTo: ['Start in a push-up position, hands together under your chest forming a diamond with thumbs and index fingers', 'Keep elbows close to your body as you lower', 'Lower your chest to your hands', 'Press back up to full extension, squeezing triceps at the top'],
+    tip: 'The narrow hand position shifts almost all the work to the triceps. Do regular push-ups first if this feels too hard.', youtubeQuery: 'diamond push up proper form triceps' },
+  { name: 'Band Overhead Press', weight: 'Resistance band (under feet)', sets: 3, reps: '15', restSeconds: 75,
+    muscles: ['Shoulders', 'Triceps'], muscleGroup: 'push',
+    howTo: ['Stand on the middle of the band, feet shoulder-width apart', 'Hold the ends at shoulder height, palms facing forward', 'Press both hands straight overhead until arms are fully extended', 'Lower slowly back to shoulder height with control'],
+    tip: 'Stand closer together on the band for more tension as you get stronger.', youtubeQuery: 'resistance band overhead press proper form shoulders' },
   // ── PULL ─────────────────────────────────────────────────────────────────
   { name: 'Bent Over Row', weight: '15 kg', sets: 4, reps: '10', restSeconds: 120,
     muscles: ['Back (Lats)', 'Rhomboids', 'Biceps'], muscleGroup: 'pull',
@@ -327,6 +348,14 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Back', 'Biceps'], muscleGroup: 'pull',
     howTo: ['Same setup as Bent Over Row — hinge forward, back flat', 'Pull bar to your belly button area — not your chest', 'Elbows drive back past your torso', 'Squeeze shoulder blades at the top', 'Lower with control — 2–3 seconds down'],
     tip: 'Keep hips from rising as you pull — that is cheating and reduces the back work.', youtubeQuery: 'barbell row proper form back muscle' },
+  { name: 'Band Bicep Curl', weight: 'Resistance band (under feet)', sets: 3, reps: '15', restSeconds: 60,
+    muscles: ['Biceps', 'Forearms'], muscleGroup: 'pull',
+    howTo: ['Stand on the middle of the band, feet hip-width apart', 'Hold the ends with palms facing forward, arms extended down', 'Elbows pinned to your sides, curl hands up toward your shoulders', 'Lower slowly back down with control'],
+    tip: 'Step wider on the band for more resistance once 15 reps feels easy.', youtubeQuery: 'resistance band bicep curl proper form' },
+  { name: 'Band Shrugs', weight: 'Resistance band (under feet)', sets: 3, reps: '20', restSeconds: 60,
+    muscles: ['Traps (Upper Back / Neck area)'], muscleGroup: 'pull',
+    howTo: ['Stand on the middle of the band, feet hip-width apart, arms straight down holding the ends', 'Raise your shoulders straight up toward your ears', 'Hold for 1 second at the top', 'Lower slowly with full control'],
+    tip: 'Straight up and down — no rolling the shoulders. Step wider on the band for more resistance.', youtubeQuery: 'resistance band shrugs proper form traps' },
   // ── LEGS ─────────────────────────────────────────────────────────────────
   { name: 'Barbell Squat', weight: '20 kg', sets: 4, reps: '10', restSeconds: 120,
     muscles: ['Quads', 'Glutes', 'Hamstrings', 'Core'], muscleGroup: 'legs',
@@ -392,6 +421,18 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Quads', 'Glutes', 'Hamstrings'], muscleGroup: 'legs',
     howTo: ['Stand about 2 feet in front of a bench or chair', 'Place the top of your rear foot on the bench behind you', 'Lower your body straight down — back knee toward the floor', 'Front knee stays over your ankle — step is far enough forward that it doesn\'t go past toes', 'Drive through your front heel to return to start — 12 reps, then switch legs'],
     tip: 'This will be hard at first. Use a wall for balance if needed. It gets easier after 2 sessions.', youtubeQuery: 'bulgarian split squat proper form beginners' },
+  { name: 'Single-Leg Romanian Deadlift', weight: 'Bodyweight', sets: 3, reps: '10 each leg', restSeconds: 75,
+    muscles: ['Hamstrings', 'Glutes', 'Balance'], muscleGroup: 'legs',
+    howTo: ['Stand on one leg, soft bend in the standing knee', 'Hinge forward at the hips, letting the other leg extend straight back behind you', 'Keep back flat, reach toward the floor with both hands', 'Go until your body forms a T-shape or you feel a hamstring stretch', 'Drive back up to standing, squeezing the glute of your standing leg'],
+    tip: 'A great bodyweight substitute for RDLs — balance is the real challenge here, not load.', youtubeQuery: 'single leg romanian deadlift bodyweight proper form' },
+  { name: 'Band Squat', weight: 'Resistance band (under feet, held at shoulders)', sets: 4, reps: '15', restSeconds: 90,
+    muscles: ['Quads', 'Glutes', 'Hamstrings'], muscleGroup: 'legs',
+    howTo: ['Stand on the middle of the band, feet shoulder-width apart', 'Hold both ends up at shoulder height, like a goblet squat grip', 'Squat down, keeping chest up and knees tracking over toes', 'Drive through your heels to stand — the band gets tighter as you rise'],
+    tip: 'Resistance increases the higher you stand — the top of the movement gets the hardest, unlike a free weight.', youtubeQuery: 'resistance band squat proper form beginners' },
+  { name: 'Band Deadlift', weight: 'Resistance band (under feet)', sets: 4, reps: '12', restSeconds: 90,
+    muscles: ['Hamstrings', 'Glutes', 'Lower Back'], muscleGroup: 'full',
+    howTo: ['Stand on the middle of the band, feet hip-width apart', 'Hold both ends with a flat back, hinge forward at the hips', 'Keep the band close to your legs as you lower', 'Drive hips forward to stand tall, squeezing glutes at the top'],
+    tip: 'Same hip-hinge pattern as a barbell deadlift — just constant band tension instead of a heavy bar.', youtubeQuery: 'resistance band deadlift proper form' },
   // ── CORE ─────────────────────────────────────────────────────────────────
   { name: 'Plank', weight: 'Bodyweight', sets: 3, reps: '30–60 sec', restSeconds: 45,
     muscles: ['Core', 'Shoulders', 'Glutes'], muscleGroup: 'core',
@@ -458,6 +499,10 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Core', 'Shoulders', 'Full Body'], muscleGroup: 'full',
     howTo: ['Start on hands and feet, knees hovering just off the floor, back flat', 'Move one hand and the opposite foot forward together', 'Keep hips low and steady — avoid rocking side to side', 'Continue for the full step count, then reverse to crawl backward'],
     tip: 'Deceptively tough on the core and shoulders — go slow before speeding up.', youtubeQuery: 'bear crawl proper form beginners' },
+  { name: 'Suryanamaskar', weight: 'Bodyweight', sets: 3, reps: '5 rounds', restSeconds: 60,
+    muscles: ['Full Body', 'Flexibility', 'Cardio'], muscleGroup: 'full',
+    howTo: ['Start standing tall, palms together at your chest (Pranamasana)', 'Reach arms overhead and lean back slightly (Hasta Uttanasana)', 'Fold forward, hands toward the floor (Hasta Padasana)', 'Step one leg back into a low lunge, look up (Ashwa Sanchalanasana)', 'Step the other leg back into a plank, then lower to the floor', 'Push up into a cobra stretch, then hips up into downward dog', 'Step forward and reverse the sequence back to standing'],
+    tip: 'A full-body flow — strength, flexibility, and cardio in one movement. Go slow at first, one breath per step.', youtubeQuery: 'suryanamaskar sun salutation full sequence beginners' },
 ];
 
 // ─── PAIN-AWARE EXERCISE SUBSTITUTION ───────────────────────────────────────
@@ -593,6 +638,86 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   'Leg Raises':         ['Russian Twist', 'Dead Bug'],
   'Russian Twist':      ['Pallof Press', 'Leg Raises'],
   'Plank':              ['Side Plank', 'Dead Bug'],
+};
+
+// ─── EQUIPMENT-AWARE ADAPTATION ──────────────────────────────────────────────
+// Per profile, which gear they actually own. Bodyweight is always available and
+// isn't toggled. Defaults to everyone owning everything, matching the app's
+// original assumption — someone with less gear (e.g. just a resistance band)
+// unchecks what they don't have in their own profile's settings.
+
+export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band';
+
+export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string }[] = [
+  { id: 'dumbbells', label: 'Dumbbells' },
+  { id: 'barbell', label: 'Barbell (bar + plates)' },
+  { id: 'ez_bar', label: 'EZ/Curl Bar' },
+  { id: 'resistance_band', label: 'Resistance Band' },
+];
+
+export const ALL_EQUIPMENT: EquipmentItem[] = EQUIPMENT_ITEMS.map((e) => e.id);
+
+// Gloves and a skipping rope don't gate whether you *can* do an exercise, so they're
+// not mapped to anything — only equipment that actually provides the resistance does.
+function tagToEquipment(tag: string): EquipmentItem | 'bodyweight' | null {
+  if (tag.startsWith('Resistance band')) return 'resistance_band';
+  if (tag === 'Straight bar' || tag.startsWith('Weight plate')) return 'barbell';
+  if (tag.startsWith('EZ')) return 'ez_bar';
+  if (tag === 'Dumbbells') return 'dumbbells';
+  if (tag === 'Bodyweight') return 'bodyweight';
+  return null;
+}
+
+// An exercise is doable if it needs nothing but bodyweight, or if the owned set covers
+// at least one of its listed equipment tags (a multi-tag entry like EZ bar + dumbbells
+// means either works, not that both are required).
+export function canDoExercise(exerciseName: string, owned: EquipmentItem[]): boolean {
+  const tags = EQUIPMENT_BY_EXERCISE[exerciseName];
+  if (!tags || tags.length === 0) return true;
+  const required = tags.map(tagToEquipment).filter((c): c is EquipmentItem | 'bodyweight' => c !== null);
+  if (required.length === 0 || required.includes('bodyweight')) return true;
+  return required.some((r) => owned.includes(r as EquipmentItem));
+}
+
+// For each exercise that needs equipment beyond bodyweight/band, which exercise (by
+// name, from EXERCISE_LIBRARY) to swap in when the profile doesn't own what it needs.
+// Prefers a resistance-band version where a good one exists, bodyweight otherwise.
+export const EQUIPMENT_ALTERNATIVE: Partial<Record<string, string>> = {
+  'Shoulder Press':         'Band Overhead Press',
+  'Barbell Overhead Press': 'Band Overhead Press',
+  'Arnold Press':           'Band Overhead Press',
+  'Push Press':             'Band Overhead Press',
+  'Incline Dumbbell Press': 'Pushup',
+  'Dumbbell Chest Fly':     'Band Chest Press',
+  'Floor Press':            'Band Chest Press',
+  'Lateral Raise':          'Face Pull',
+  'Dumbbell Front Raise':   'Scapular Push-up',
+  'Triceps Extension':      'Band Triceps Pushdown',
+  'Skull Crusher':          'Band Triceps Pushdown',
+  'Bent Over Row':          'Band Row',
+  'Barbell Row':            'Band Row',
+  'Single-Arm Dumbbell Row':'Band Row',
+  'Renegade Row':           'Bear Crawl',
+  'Bicep Curl':             'Band Bicep Curl',
+  'Hammer Curl':            'Band Bicep Curl',
+  'Concentration Curl':     'Band Bicep Curl',
+  'Barbell Curl':           'Band Bicep Curl',
+  'Rear Delt Fly':          'Band Pull-Apart',
+  'Shrugs':                 'Band Shrugs',
+  'Romanian Deadlift':      'Single-Leg Romanian Deadlift',
+  'Good Morning':           'Single-Leg Romanian Deadlift',
+  'Deadlift':               'Band Deadlift',
+  'Sumo Deadlift':          'Band Deadlift',
+  'Dumbbell Deadlift':      'Band Deadlift',
+  'Barbell Squat':          'Band Squat',
+  'Goblet Squat':           'Band Squat',
+  'Walking Lunge':          'Band Squat',
+  'Lunges':                 'Band Squat',
+  'Bulgarian Split Squat':  'Band Squat',
+  'Dumbbell Step-Up':       'Wall Sit',
+  'Farmer Walk':            'Bear Crawl',
+  'Hip Thrust':             'Glute Bridge',
+  'Russian Twist':          'Pallof Press',
 };
 
 export const PHASES: Record<1 | 2 | 3, PhaseData> = {
