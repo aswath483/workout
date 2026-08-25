@@ -140,7 +140,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
 
   if (!checkedLoaded || !sessionsLoaded || !customLoaded || !levelLoaded || !streakLoaded || !painAreasLoaded || !sessionDatesLoaded) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
+      <div className="flex items-center justify-center min-h-screen w-full bg-[#0f0f0f]">
         <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -149,9 +149,9 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const cfg = LEVEL_CONFIG[level];
 
   return (
-    <div className="bg-[#0f0f0f] min-h-screen text-[#f1f1f1] pb-20 max-w-md mx-auto">
+    <div className="bg-[#0f0f0f] min-h-screen text-[#f1f1f1] pb-20 w-full max-w-md">
       <header className="sticky top-0 z-50 bg-[#1a1a1a] border-b border-[#2a2a2a] px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="min-w-0">
             <h1 className="font-bold text-[17px] tracking-tight">12-Week Transformation</h1>
             <p className="text-[12px] text-[#888] mt-0.5">
@@ -160,7 +160,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
                screen === 'progress' ? 'Track Your Journey' : 'Nutrition & Recovery Guide'}
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {streak.count > 0 && (
               <div className="flex items-center gap-1 bg-[#713f12]/60 border border-[#facc15]/30 rounded-xl px-2.5 py-1.5">
                 <span className="text-sm">🔥</span>
@@ -369,7 +369,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
 
 function IdentityPicker({ onChoose }: { onChoose: (id: ProfileId) => void }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0f0f0f] px-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen w-full bg-[#0f0f0f] px-6 text-center">
       <h1 className="text-white font-bold text-xl mb-2">Who&apos;s tracking?</h1>
       <p className="text-[#888] text-sm mb-8">Pick your profile — your progress stays separate from theirs.</p>
       <div className="w-full max-w-sm space-y-3">
@@ -389,7 +389,7 @@ function IdentityPicker({ onChoose }: { onChoose: (id: ProfileId) => void }) {
 
 function Spinner() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
+    <div className="flex items-center justify-center min-h-screen w-full bg-[#0f0f0f]">
       <div className="w-8 h-8 border-2 border-[#4ade80] border-t-transparent rounded-full animate-spin" />
     </div>
   );
