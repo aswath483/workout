@@ -68,6 +68,14 @@ const WARMUP_ITEMS = [
   'Walking lunges — 5 steps each leg',
 ];
 
+const WARMDOWN_ITEMS = [
+  'Standing quad stretch — 20 sec each leg',
+  'Hamstring stretch (seated or standing toe touch) — 20 sec',
+  'Chest doorway/wall stretch — 20 sec each side',
+  'Child\'s pose — 30 sec',
+  '2 min slow walk or deep breathing — bring your heart rate back down',
+];
+
 export interface SessionNote {
   mood: string;
   note: string;
@@ -391,6 +399,8 @@ function SessionDetail({
 
   const [warmupDone, setWarmupDone] = useState<boolean[]>(() => Array(WARMUP_ITEMS.length).fill(false));
   const [warmupExpanded, setWarmupExpanded] = useState(true);
+  const [warmdownDone, setWarmdownDone] = useState<boolean[]>(() => Array(WARMDOWN_ITEMS.length).fill(false));
+  const [warmdownExpanded, setWarmdownExpanded] = useState(false);
 
   // Note / mood state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -835,6 +845,38 @@ function SessionDetail({
               </div>
             );
           })()}
+
+          {/* Warmdown / cool-down — same idea as warm-up, but after the work is done */}
+          {!isDone && (
+            <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setWarmdownExpanded(!warmdownExpanded)}
+                className="w-full flex items-center justify-between p-4"
+              >
+                <span className="text-sm font-bold text-white">
+                  ❄️ Cool-down {warmdownDone.every(Boolean) ? '· Done' : `· ${warmdownDone.filter(Boolean).length}/${WARMDOWN_ITEMS.length}`}
+                </span>
+                <span className={`text-[#888] text-xs transition-transform ${warmdownExpanded ? 'rotate-180' : ''}`}>▾</span>
+              </button>
+              {warmdownExpanded && (
+                <div className="px-4 pb-4 space-y-2">
+                  <p className="text-[11px] text-[#888] mb-1">Do this after you finish — brings your heart rate down and helps recovery.</p>
+                  {WARMDOWN_ITEMS.map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setWarmdownDone((prev) => prev.map((v, idx) => (idx === i ? !v : v)))}
+                      className="w-full flex items-center gap-3 text-left"
+                    >
+                      <span className={`w-5 h-5 rounded-md border flex-shrink-0 flex items-center justify-center text-[11px] ${
+                        warmdownDone[i] ? 'bg-[#60a5fa] border-[#60a5fa] text-black' : 'border-[#2a2a2a] text-transparent'
+                      }`}>✓</span>
+                      <span className={`text-[13px] leading-snug ${warmdownDone[i] ? 'text-[#666] line-through' : 'text-[#ccc]'}`}>{item}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>
