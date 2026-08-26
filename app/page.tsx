@@ -262,7 +262,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
       </header>
 
       {showProfileSwitcher && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowProfileSwitcher(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
                onClick={(e) => e.stopPropagation()}>
@@ -302,7 +302,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
       )}
 
       {showLevelPicker && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowLevelPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
                onClick={(e) => e.stopPropagation()}>
@@ -371,7 +371,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
       )}
 
       {showPainPicker && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowPainPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
                onClick={(e) => e.stopPropagation()}>
@@ -410,7 +410,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
       )}
 
       {showEquipmentPicker && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowEquipmentPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
                onClick={(e) => e.stopPropagation()}>
@@ -455,7 +455,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         const [lossLo, lossHi] = latestWeight ? safeWeeklyLossRange(latestWeight) : [0, 0];
         const [proteinLo, proteinHi] = latestWeight ? proteinTargetRange(latestWeight) : [0, 0];
         return (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+          <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/70 backdrop-blur-sm"
                onClick={() => setShowGoalPicker(false)}>
             <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto"
                  onClick={(e) => e.stopPropagation()}>

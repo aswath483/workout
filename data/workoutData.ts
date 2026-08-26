@@ -719,6 +719,15 @@ function tagToEquipment(tag: string): EquipmentItem | 'bodyweight' | null {
   return null;
 }
 
+// Which equipment categories an exercise actually needs — for filtering the library by
+// gear type. 'bodyweight' means it needs nothing at all.
+export function exerciseEquipmentTypes(exerciseName: string): (EquipmentItem | 'bodyweight')[] {
+  const tags = EQUIPMENT_BY_EXERCISE[exerciseName];
+  if (!tags || tags.length === 0) return ['bodyweight'];
+  const types = tags.map(tagToEquipment).filter((c): c is EquipmentItem | 'bodyweight' => c !== null);
+  return types.length > 0 ? Array.from(new Set(types)) : ['bodyweight'];
+}
+
 // An exercise is doable if it needs nothing but bodyweight, or if the owned set covers
 // at least one of its listed equipment tags (a multi-tag entry like EZ bar + dumbbells
 // means either works, not that both are required).

@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import {
-  SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS,
-  EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, canDoExercise,
+  SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS, EQUIPMENT_ITEMS,
+  EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, canDoExercise, exerciseEquipmentTypes,
   type ExerciseInfo, type PainArea, type EquipmentItem, type HIITDay,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
@@ -39,6 +39,13 @@ interface Props {
 }
 
 type MuscleFilter = 'all' | 'push' | 'pull' | 'legs' | 'core' | 'full';
+type LibraryEquipmentFilter = 'all' | 'bodyweight' | EquipmentItem;
+
+const EQUIPMENT_FILTER_OPTIONS: { id: LibraryEquipmentFilter; label: string }[] = [
+  { id: 'all', label: 'All Gear' },
+  { id: 'bodyweight', label: 'Bodyweight' },
+  ...EQUIPMENT_ITEMS.map((e) => ({ id: e.id as LibraryEquipmentFilter, label: e.label })),
+];
 
 const PHASE_COLORS = {
   1: { bg: 'bg-[#14532d]/20', border: 'border-[#14532d]', text: 'text-[#4ade80]', dot: '#4ade80', badge: 'bg-[#14532d] text-[#4ade80]', label: 'Foundation' },
@@ -170,6 +177,7 @@ export default function WorkoutScreen({
   const [activeSession, setActiveSession] = useState<number | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
   const [libraryFilter, setLibraryFilter] = useState<MuscleFilter>('all');
+  const [libraryEquipmentFilter, setLibraryEquipmentFilter] = useState<LibraryEquipmentFilter>('all');
 
   const nextSession = SESSIONS.find(s => !completedSessions.includes(s.sessionNum)) ?? SESSIONS[SESSIONS.length - 1];
 
@@ -194,6 +202,8 @@ export default function WorkoutScreen({
         setShowLibrary={setShowLibrary}
         libraryFilter={libraryFilter}
         setLibraryFilter={setLibraryFilter}
+        libraryEquipmentFilter={libraryEquipmentFilter}
+        setLibraryEquipmentFilter={setLibraryEquipmentFilter}
         streak={streak}
         profileId={profileId}
         onBack={() => setActiveSession(null)}
@@ -334,6 +344,8 @@ interface DetailProps extends Omit<Props, 'completedSessions' | 'onSessionComple
   setShowLibrary: (v: boolean) => void;
   libraryFilter: MuscleFilter;
   setLibraryFilter: (v: MuscleFilter) => void;
+  libraryEquipmentFilter: LibraryEquipmentFilter;
+  setLibraryEquipmentFilter: (v: LibraryEquipmentFilter) => void;
   onBack: () => void;
 }
 
@@ -342,6 +354,7 @@ function SessionDetail({
   completedSessions, onSessionComplete,
   customExercises, onAddCustomExercise, onRemoveCustomExercise,
   showLibrary, setShowLibrary, libraryFilter, setLibraryFilter,
+  libraryEquipmentFilter, setLibraryEquipmentFilter,
   streak, onBack, profileId, painAreas, ownedEquipment, goal, newToTraining,
 }: DetailProps) {
   const session = SESSIONS.find(s => s.sessionNum === sessionNum)!;
@@ -423,14 +436,16 @@ function SessionDetail({
       .concat(finisherExercises.map(e => e.exercise.name))
   );
   const libraryFiltered = EXERCISE_LIBRARY.filter(e =>
-    (libraryFilter === 'all' || e.muscleGroup === libraryFilter) && !sessionExNames.has(e.name)
+    (libraryFilter === 'all' || e.muscleGroup === libraryFilter) &&
+    (libraryEquipmentFilter === 'all' || exerciseEquipmentTypes(e.name).includes(libraryEquipmentFilter)) &&
+    !sessionExNames.has(e.name)
   );
 
   return (
     <>
       {/* Note / mood modal */}
       {showNoteModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 isolate flex items-end justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-[#1a1a1a] border-t border-[#2a2a2a] rounded-t-3xl w-full max-w-lg p-6 pb-10">
             <div className="flex items-start justify-between mb-5">
               <div>
@@ -488,11 +503,11 @@ function SessionDetail({
 
       {/* Library overlay */}
       {showLibrary && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/70 backdrop-blur-sm"
+        <div className="fixed inset-0 z-50 isolate flex flex-col justify-end bg-black/70 backdrop-blur-sm"
              onClick={() => setShowLibrary(false)}>
           <div className="bg-[#1a1a1a] border-t border-[#2a2a2a] rounded-t-3xl max-h-[80vh] flex flex-col"
                onClick={e => e.stopPropagation()}>
-            <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <div className="flex-shrink-0 px-5 pt-5 pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-white font-bold text-lg">Exercise Library</h3>
                 <p className="text-[#888] text-xs mt-0.5">Tap to add to Session {sessionNum}</p>
@@ -503,8 +518,8 @@ function SessionDetail({
               </button>
             </div>
 
-            {/* Filter tabs */}
-            <div className="flex gap-2 px-5 pb-3 overflow-x-auto scrollbar-hide">
+            {/* Filter tabs — muscle group */}
+            <div className="flex-shrink-0 flex gap-2 px-5 pb-2 overflow-x-auto scrollbar-hide">
               {(['all', 'push', 'pull', 'legs', 'core', 'full'] as MuscleFilter[]).map(f => (
                 <button
                   key={f}
@@ -520,10 +535,27 @@ function SessionDetail({
               ))}
             </div>
 
+            {/* Filter tabs — equipment */}
+            <div className="flex-shrink-0 flex gap-2 px-5 pb-3 overflow-x-auto scrollbar-hide">
+              {EQUIPMENT_FILTER_OPTIONS.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => setLibraryEquipmentFilter(f.id)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    libraryEquipmentFilter === f.id
+                      ? 'bg-[#7dd3fc] text-black border-[#7dd3fc]'
+                      : 'bg-transparent text-[#888] border-[#2a2a2a]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
             {/* Exercise list */}
-            <div className="overflow-y-auto px-4 pb-6 space-y-2">
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6 space-y-2">
               {libraryFiltered.length === 0 ? (
-                <p className="text-[#888] text-sm text-center py-8">All {libraryFilter} exercises already in this session.</p>
+                <p className="text-[#888] text-sm text-center py-8">No matching exercises — try a different muscle group or equipment filter.</p>
               ) : (
                 libraryFiltered.map(ex => (
                   <div key={ex.name}
