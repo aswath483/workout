@@ -652,6 +652,13 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   'Leg Raises':         ['Russian Twist', 'Dead Bug'],
   'Russian Twist':      ['Pallof Press', 'Leg Raises'],
   'Plank':              ['Side Plank', 'Dead Bug'],
+  'Shrugs':             ['Farmer Walk', 'Band Shrugs'],
+  'Hammer Curl':        ['Concentration Curl', 'Band Bicep Curl'],
+  'Bulgarian Split Squat': ['Dumbbell Step-Up', 'Walking Lunge'],
+  'Farmer Walk':        ['Bear Crawl', 'Shrugs'],
+  'Mountain Climbers':  ['High Knees', 'Bear Crawl'],
+  'Pushup Finisher':    ['Diamond Push-up', 'Pike Push-up'],
+  'Burpees Finisher':   ['Mountain Climbers', 'High Knees'],
 };
 
 // ─── EQUIPMENT-AWARE ADAPTATION ──────────────────────────────────────────────

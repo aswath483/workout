@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS,
+  EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, canDoExercise,
   type ExerciseInfo, type PainArea, type EquipmentItem, type HIITDay,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
@@ -84,6 +85,10 @@ function saveNote(profileId: ProfileId, sessionNum: number, entry: SessionNote) 
   try { localStorage.setItem(profileKey(profileId, 'session_notes'), JSON.stringify(all)); } catch {}
 }
 
+const EXERCISE_BY_NAME: Record<string, ExerciseInfo> = Object.fromEntries(
+  EXERCISE_LIBRARY.map((e) => [e.name, e])
+);
+
 interface CombinedAdapted {
   exercise: ExerciseInfo;
   swappedFor?: PainArea;
@@ -91,6 +96,40 @@ interface CombinedAdapted {
   caution?: PainArea;
   equipmentSwap?: boolean;
   equipmentCaution?: boolean;
+  manualSwap?: boolean;
+}
+
+// Same-muscle, comparable-intensity alternatives for a given (already equipment/pain
+// adapted) exercise name — reuses the curated weekly-variation pool so a personal "I'm
+// bored of this" swap can never be less effective or reintroduce gear/pain conflicts.
+function getSwapOptions(name: string, ownedEquipment: EquipmentItem[], activePainAreas: PainArea[]): string[] {
+  const variants = EXERCISE_VARIANTS[name] ?? [];
+  return variants.filter((v) => {
+    if (!canDoExercise(v, ownedEquipment)) return false;
+    const strains = EXERCISE_STRAIN_AREAS[v];
+    if (strains?.some((a) => activePainAreas.includes(a))) return false;
+    return true;
+  });
+}
+
+// Applies the user's on-demand, view-only picks from getSwapOptions — never persisted,
+// resets whenever the session screen is left, purely a "give me something different
+// today" escape hatch on top of the automatic pain/equipment/variation layers.
+function applyManualSwaps(
+  items: CombinedAdapted[],
+  overrides: Record<number, string>,
+  ownedEquipment: EquipmentItem[],
+  activePainAreas: PainArea[]
+): CombinedAdapted[] {
+  return items.map((item, i) => {
+    const chosen = overrides[i];
+    if (!chosen) return item;
+    const options = getSwapOptions(item.exercise.name, ownedEquipment, activePainAreas);
+    if (!options.includes(chosen)) return item;
+    const alt = EXERCISE_BY_NAME[chosen];
+    if (!alt) return item;
+    return { exercise: alt, originalName: item.exercise.name, manualSwap: true };
+  });
 }
 
 // Runs equipment adaptation first (swap for gear the profile actually owns), then pain
@@ -315,8 +354,30 @@ function SessionDetail({
   };
   const effectivePainAreas = Array.from(new Set([...painAreas, ...todayPainAreas]));
 
+  // "Bored of this exercise?" — a same-visit-only manual swap, cycling through the
+  // curated weekly-variation pool (never persisted, resets when you leave the session).
+  const [manualSwaps, setManualSwaps] = useState<Record<number, string>>({});
+  const cycleSwap = (i: number, options: string[]) => {
+    if (options.length === 0) return;
+    setManualSwaps((prev) => {
+      const current = prev[i];
+      const idx = current ? options.indexOf(current) : -1;
+      if (idx === -1) return { ...prev, [i]: options[0] };
+      if (idx === options.length - 1) {
+        const next = { ...prev };
+        delete next[i];
+        return next;
+      }
+      return { ...prev, [i]: options[idx + 1] };
+    });
+  };
+
+  const equipmentPainAdapted = combineAdaptations(variedBaseExercises, ownedEquipment, effectivePainAreas);
+  const baseSwapOptions = equipmentPainAdapted.map((item) => getSwapOptions(item.exercise.name, ownedEquipment, effectivePainAreas));
+  const manualSwapped = applyManualSwaps(equipmentPainAdapted, manualSwaps, ownedEquipment, effectivePainAreas);
+
   const baseExercises = applyDeload(
-    applyNewToTraining(combineAdaptations(variedBaseExercises, ownedEquipment, effectivePainAreas), session.phase, session.weekInPhase, newToTraining),
+    applyNewToTraining(manualSwapped, session.phase, session.weekInPhase, newToTraining),
     session.weekInPhase
   );
   const adaptedCustoms = applyDeload(
@@ -637,6 +698,9 @@ function SessionDetail({
                   caution={adapted.caution}
                   equipmentSwap={adapted.equipmentSwap}
                   equipmentCaution={adapted.equipmentCaution}
+                  manualSwap={adapted.manualSwap}
+                  swapAvailable={baseSwapOptions[i].length > 0}
+                  onSwap={() => cycleSwap(i, baseSwapOptions[i])}
                   phase={session.phase}
                   sessionKey={sessionKey}
                   exerciseIndex={i}

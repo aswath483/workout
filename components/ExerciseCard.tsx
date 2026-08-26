@@ -25,6 +25,9 @@ interface Props {
   equipmentSwap?: boolean;
   equipmentCaution?: boolean;
   defaultExpanded?: boolean;
+  manualSwap?: boolean;
+  swapAvailable?: boolean;
+  onSwap?: () => void;
 }
 
 const MUSCLE_COLORS: Record<string, string> = {
@@ -45,7 +48,7 @@ function painAreaLabel(area: PainArea): string {
   return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
 }
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution, defaultExpanded }: Props) {
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution, defaultExpanded, manualSwap, swapAvailable, onSwap }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
@@ -135,6 +138,20 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]" title="No gear-free swap known yet — skip it or improvise.">
                     ⚠️ Caution · Needs gear
                   </span>
+                )}
+                {manualSwap && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#581c87]/40 text-[#c084fc]" title={originalName ? `Your pick, swapped from ${originalName}` : 'Your pick'}>
+                    🔀 Your pick
+                  </span>
+                )}
+                {onSwap && swapAvailable && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onSwap(); }}
+                    className="ml-auto text-[#888] hover:text-[#c084fc] text-[10px] font-semibold px-2 py-0.5 rounded-lg border border-[#2a2a2a] transition-colors flex-shrink-0"
+                    title="Bored of this one? Swap it for a same-muscle alternative, just for today."
+                  >
+                    🔀 Swap
+                  </button>
                 )}
                 {onRemove && (
                   <button
