@@ -200,7 +200,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
           <div className="min-w-0">
             <h1 className="font-bold text-[17px] tracking-tight">12-Week Transformation</h1>
             <p className="text-[12px] text-[#888] mt-0.5">
-              {readOnly ? `Viewing ${viewerLabel}'s progress · read-only` :
+              {readOnly ? `Viewing ${viewerLabel}'s profile` :
                screen === 'workout' ? 'Fat Loss · Muscle · Toned Look' :
                screen === 'progress' ? 'Track Your Journey' : 'Nutrition & Recovery Guide'}
             </p>
@@ -222,44 +222,38 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
               </svg>
             </button>
             <button
-              onClick={() => !readOnly && setShowLevelPicker(true)}
-              disabled={readOnly}
-              className={`flex items-center gap-1.5 bg-[#2a2a2a] rounded-xl px-3 py-2 ${readOnly ? 'opacity-50' : ''}`}
+              onClick={() => setShowLevelPicker(true)}
+              className="flex items-center gap-1.5 bg-[#2a2a2a] rounded-xl px-3 py-2"
             >
               <span className={`text-[11px] font-bold ${cfg.color}`}>{cfg.label}</span>
-              {!readOnly && (
-                <svg className="w-3 h-3 text-[#888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              )}
+              <svg className="w-3 h-3 text-[#888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
             <button
-              onClick={() => !readOnly && setShowPainPicker(true)}
-              disabled={readOnly}
+              onClick={() => setShowPainPicker(true)}
               title="Adjust for pain"
               className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
                 painAreas.length > 0 ? 'bg-[#7f1d1d]/40 border border-[#f87171]/40' : 'bg-[#2a2a2a]'
-              } ${readOnly ? 'opacity-50' : ''}`}
+              }`}
             >
               <span className="text-sm">🩹</span>
             </button>
             <button
-              onClick={() => !readOnly && setShowEquipmentPicker(true)}
-              disabled={readOnly}
+              onClick={() => setShowEquipmentPicker(true)}
               title="Your equipment"
               className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
                 ownedEquipment.length < ALL_EQUIPMENT.length ? 'bg-[#1e3a5f]/40 border border-[#7dd3fc]/40' : 'bg-[#2a2a2a]'
-              } ${readOnly ? 'opacity-50' : ''}`}
+              }`}
             >
               <span className="text-sm">🎒</span>
             </button>
             <button
-              onClick={() => !readOnly && setShowGoalPicker(true)}
-              disabled={readOnly}
+              onClick={() => setShowGoalPicker(true)}
               title="Goal & body stats"
               className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
                 goal !== 'recomp' || heightCm ? 'bg-[#581c87]/40 border border-[#c084fc]/40' : 'bg-[#2a2a2a]'
-              } ${readOnly ? 'opacity-50' : ''}`}
+              }`}
             >
               <span className="text-sm">🎯</span>
             </button>
@@ -274,7 +268,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
                onClick={(e) => e.stopPropagation()}>
             <h2 className="text-white font-bold text-lg mb-1">Switch Profile</h2>
             <p className="text-[#888] text-sm mb-5">
-              Viewing someone else&apos;s profile is read-only — you can see their progress but can&apos;t change it.
+              Switching shows their progress and settings — you can view and edit either profile from here.
             </p>
             <div className="space-y-3">
               {PROFILES.map((p) => {
@@ -307,7 +301,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
-      {showLevelPicker && !readOnly && (
+      {showLevelPicker && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowLevelPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
@@ -376,7 +370,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
-      {showPainPicker && !readOnly && (
+      {showPainPicker && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowPainPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
@@ -415,7 +409,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
-      {showEquipmentPicker && !readOnly && (
+      {showEquipmentPicker && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
              onClick={() => setShowEquipmentPicker(false)}>
           <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-t-3xl p-6 w-full max-w-lg"
@@ -454,7 +448,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         </div>
       )}
 
-      {showGoalPicker && !readOnly && (() => {
+      {showGoalPicker && (() => {
         const bmi = heightCm && latestWeight ? calcBMI(latestWeight, heightCm) : null;
         const category = bmi ? bmiCategory(bmi) : null;
         const [healthyLo, healthyHi] = heightCm ? healthyWeightRange(heightCm) : [0, 0];
@@ -570,7 +564,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
         );
       })()}
 
-      <div className={readOnly ? 'pointer-events-none' : undefined}>
+      <div>
         {screen === 'workout' && (
           <WorkoutScreen
             checked={checked}
@@ -657,7 +651,10 @@ export default function App() {
     let cancelled = false;
     // A slow/stalled connection should never block the app forever — fall through to
     // local data after a few seconds; the sync itself keeps running in the background.
-    const sync = syncProfile(viewingProfileId, viewingProfileId === myProfileId);
+    // Whichever profile is currently being viewed is editable and pushes to the cloud —
+    // not just "your own" identity — so switching to check on someone else's profile
+    // lets you actually help them set things up, not just look.
+    const sync = syncProfile(viewingProfileId, true);
     const timeout = new Promise<void>((resolve) => setTimeout(resolve, 6000));
     Promise.race([sync, timeout]).finally(() => {
       if (!cancelled) setSyncedProfileId(viewingProfileId);
