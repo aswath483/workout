@@ -174,6 +174,11 @@ export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
   // Resistance / thera band
   'Face Pull':              ['Resistance band'],
   'Hip Thrust':             ['Straight bar', 'Weight plates', 'Resistance band (around knees)'],
+  // Medicine ball
+  'Medicine Ball Chest Pass':       ['Medicine ball'],
+  'Medicine Ball Russian Twist':    ['Medicine ball'],
+  'Medicine Ball Slam':             ['Medicine ball'],
+  'Medicine Ball Squat to Press':   ['Medicine ball'],
 };
 
 export const EZ_BAR_ALTERNATIVE: Record<string, string> = {
@@ -287,6 +292,10 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Shoulders', 'Triceps'], muscleGroup: 'push',
     howTo: ['Stand on the middle of the band, feet shoulder-width apart', 'Hold the ends at shoulder height, palms facing forward', 'Press both hands straight overhead until arms are fully extended', 'Lower slowly back to shoulder height with control'],
     tip: 'Stand closer together on the band for more tension as you get stronger.', youtubeQuery: 'resistance band overhead press proper form shoulders' },
+  { name: 'Medicine Ball Chest Pass', weight: 'Medicine ball (3–6 kg)', sets: 3, reps: '15', restSeconds: 60,
+    muscles: ['Chest', 'Triceps', 'Shoulders'], muscleGroup: 'push',
+    howTo: ['Stand facing a solid wall about 3–4 feet away, holding the ball at your chest', 'Push the ball explosively into the wall like a basketball chest pass', 'Catch it on the rebound and pass again right away', 'Keep your core braced throughout'],
+    tip: 'No solid wall to use? Do slow, controlled presses out and back instead of throws.', youtubeQuery: 'medicine ball chest pass wall throw proper form' },
   // ── PULL ─────────────────────────────────────────────────────────────────
   { name: 'Bent Over Row', weight: '15 kg', sets: 4, reps: '10', restSeconds: 120,
     muscles: ['Back (Lats)', 'Rhomboids', 'Biceps'], muscleGroup: 'pull',
@@ -470,6 +479,10 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Core', 'Obliques'], muscleGroup: 'core',
     howTo: ['Anchor a band at chest height to your side, stand perpendicular to it', 'Hold the band with both hands at your chest', 'Press the band straight out in front of you, resisting the pull toward the anchor', 'Hold for a second, then return to your chest with control'],
     tip: 'Trains your core to resist rotation instead of creating it — very easy on the lower back.', youtubeQuery: 'pallof press proper form core anti rotation' },
+  { name: 'Medicine Ball Russian Twist', weight: 'Medicine ball (3–6 kg)', sets: 3, reps: '16 each side', restSeconds: 60,
+    muscles: ['Obliques', 'Core'], muscleGroup: 'core',
+    howTo: ['Sit on the floor, knees bent, lean back to about 45°', 'Hold the medicine ball at your chest with both hands', 'Rotate your torso to tap the ball on the floor beside your hip', 'Rotate to the other side — that\'s 1 rep each way'],
+    tip: 'Move from your core, not your arms — the ball should travel with your shoulders turning.', youtubeQuery: 'medicine ball russian twist proper form obliques' },
   // ── FULL ─────────────────────────────────────────────────────────────────
   { name: 'Deadlift', weight: '20 kg', sets: 4, reps: '8', restSeconds: 120,
     muscles: ['Back', 'Glutes', 'Hamstrings', 'Core', 'Forearms'], muscleGroup: 'full',
@@ -503,6 +516,14 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Full Body', 'Flexibility', 'Cardio'], muscleGroup: 'full',
     howTo: ['Start standing tall, palms together at your chest (Pranamasana)', 'Reach arms overhead and lean back slightly (Hasta Uttanasana)', 'Fold forward, hands toward the floor (Hasta Padasana)', 'Step one leg back into a low lunge, look up (Ashwa Sanchalanasana)', 'Step the other leg back into a plank, then lower to the floor', 'Push up into a cobra stretch, then hips up into downward dog', 'Step forward and reverse the sequence back to standing'],
     tip: 'A full-body flow — strength, flexibility, and cardio in one movement. Go slow at first, one breath per step.', youtubeQuery: 'suryanamaskar sun salutation full sequence beginners' },
+  { name: 'Medicine Ball Slam', weight: 'Medicine ball (6–10 kg)', sets: 3, reps: '12', restSeconds: 75,
+    muscles: ['Full Body', 'Core', 'Cardio'], muscleGroup: 'full',
+    howTo: ['Hold the medicine ball overhead with both hands, feet shoulder-width apart', 'Brace your core and slam the ball down to the floor as hard as you can', 'Bend your knees to catch it on the bounce or pick it back up', 'Reset and repeat with control between reps'],
+    tip: 'A great stress-relieving finisher — keep your back flat as you bend down, not rounded.', youtubeQuery: 'medicine ball slam proper form beginners' },
+  { name: 'Medicine Ball Squat to Press', weight: 'Medicine ball (6–10 kg)', sets: 3, reps: '12', restSeconds: 75,
+    muscles: ['Quads', 'Glutes', 'Shoulders'], muscleGroup: 'legs',
+    howTo: ['Hold the ball at chest height, feet shoulder-width apart', 'Squat down keeping chest up and the ball at your chest', 'Drive up through your heels and press the ball overhead as you stand', 'Lower the ball back to chest height as you descend into the next rep'],
+    tip: 'One fluid movement — let the leg drive help power the ball overhead, not just your arms.', youtubeQuery: 'medicine ball squat to press proper form' },
 ];
 
 // ─── PAIN-AWARE EXERCISE SUBSTITUTION ───────────────────────────────────────
@@ -572,6 +593,9 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
   'Band Squat':           ['knee'],
   'Band Deadlift':        ['knee', 'lower_back'],
   'Suryanamaskar':        ['lower_back', 'wrist', 'knee'],
+  'Medicine Ball Slam':           ['knee'],
+  'Medicine Ball Squat to Press': ['knee'],
+  'Medicine Ball Russian Twist':  ['lower_back'],
 };
 
 // For each strained exercise, which exercise (by name, from EXERCISE_LIBRARY) to swap
@@ -627,6 +651,9 @@ export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, s
   'Single-Leg Romanian Deadlift': { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
   'Band Squat':             { knee: 'Glute Bridge' },
   'Band Deadlift':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
+  'Medicine Ball Slam':           { knee: 'Glute Bridge' },
+  'Medicine Ball Squat to Press': { knee: 'Glute Bridge' },
+  'Medicine Ball Russian Twist':  { lower_back: 'Dead Bug' },
 };
 
 // ─── WEEKLY VARIATION ────────────────────────────────────────────────────────
@@ -668,13 +695,14 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
 // original assumption — someone with less gear (e.g. just a resistance band)
 // unchecks what they don't have in their own profile's settings.
 
-export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band';
+export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band' | 'medicine_ball';
 
 export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string }[] = [
   { id: 'dumbbells', label: 'Dumbbells' },
   { id: 'barbell', label: 'Barbell (bar + plates)' },
   { id: 'ez_bar', label: 'EZ/Curl Bar' },
   { id: 'resistance_band', label: 'Resistance Band' },
+  { id: 'medicine_ball', label: 'Medicine Ball' },
 ];
 
 export const ALL_EQUIPMENT: EquipmentItem[] = EQUIPMENT_ITEMS.map((e) => e.id);
@@ -686,6 +714,7 @@ function tagToEquipment(tag: string): EquipmentItem | 'bodyweight' | null {
   if (tag === 'Straight bar' || tag.startsWith('Weight plate')) return 'barbell';
   if (tag.startsWith('EZ')) return 'ez_bar';
   if (tag === 'Dumbbells') return 'dumbbells';
+  if (tag === 'Medicine ball') return 'medicine_ball';
   if (tag === 'Bodyweight') return 'bodyweight';
   return null;
 }
