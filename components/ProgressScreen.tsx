@@ -4,6 +4,7 @@ import { SESSIONS } from '@/data/workoutData';
 import { MOODS, type SessionNote } from './WorkoutScreen';
 import BodyWeightTracker from './BodyWeightTracker';
 import TrainingCalendar from './TrainingCalendar';
+import PainHistoryTrend from './PainHistoryTrend';
 import { profileKey, type ProfileId } from '@/lib/profiles';
 
 interface Props {
@@ -61,6 +62,9 @@ export default function ProgressScreen({ completedSessions, onReset, profileId, 
 
       {/* Training Calendar */}
       <TrainingCalendar sessionDates={sessionDates} />
+
+      {/* Pain History Trend */}
+      <PainHistoryTrend profileId={profileId} />
 
       {/* Overall ring */}
       <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-2xl p-4">

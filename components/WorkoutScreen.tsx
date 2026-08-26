@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS, EQUIPMENT_ITEMS,
   EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, canDoExercise, exerciseEquipmentTypes,
@@ -14,6 +14,7 @@ import { adaptExercisesForEquipment } from '@/lib/equipmentAdaptation';
 import { applyWeeklyVariation, applyDeload, isDeloadWeek } from '@/lib/weeklyVariation';
 import { getFinisherExercises, applyNewToTraining } from '@/lib/goalAdaptation';
 import { adaptHiitExercises } from '@/lib/hiitAdaptation';
+import { logPainOccurrences } from '@/lib/painHistory';
 
 const CARDIO_IMPACT_AREAS: PainArea[] = ['knee', 'lower_back'];
 function painAreaLabel(area: PainArea): string {
@@ -374,6 +375,14 @@ function SessionDetail({
     setTodayPainAreas((prev) => (prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]));
   };
   const effectivePainAreas = Array.from(new Set([...painAreas, ...todayPainAreas]));
+
+  // Logs each active pain area once per day, so the Progress screen can show how often
+  // a given area has actually affected training — not just whether it's on right now.
+  const effectivePainAreasKey = effectivePainAreas.join(',');
+  useEffect(() => {
+    if (effectivePainAreasKey) logPainOccurrences(profileId, effectivePainAreasKey.split(',') as PainArea[]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectivePainAreasKey, profileId]);
 
   // "Bored of this exercise?" — a same-visit-only manual swap, cycling through the
   // curated weekly-variation pool (never persisted, resets when you leave the session).
