@@ -552,7 +552,8 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
   'Lateral Raise':        ['shoulder'],
   'Dips':                 ['shoulder', 'elbow'],
   'Pull-Ups':             ['shoulder', 'elbow'],
-  'Push Press':           ['shoulder'],
+  'Push Press':           ['shoulder', 'knee'],
+  'Wall Sit':             ['knee'],
   'Barbell Curl':         ['elbow', 'wrist'],
   'Bicep Curl':           ['elbow'],
   'Concentration Curl':   ['elbow'],
@@ -570,7 +571,7 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
   'Single-Leg Romanian Deadlift': ['knee', 'lower_back'],
   'Band Squat':           ['knee'],
   'Band Deadlift':        ['knee', 'lower_back'],
-  'Suryanamaskar':        ['lower_back', 'wrist'],
+  'Suryanamaskar':        ['lower_back', 'wrist', 'knee'],
 };
 
 // For each strained exercise, which exercise (by name, from EXERCISE_LIBRARY) to swap
@@ -608,7 +609,8 @@ export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, s
   'Lateral Raise':          { shoulder: 'Face Pull' },
   'Dips':                   { shoulder: 'Floor Press', elbow: 'Band Triceps Pushdown' },
   'Pull-Ups':               { shoulder: 'Single-Arm Dumbbell Row', elbow: 'Single-Arm Dumbbell Row' },
-  'Push Press':             { shoulder: 'Floor Press' },
+  'Push Press':             { shoulder: 'Floor Press', knee: 'Shoulder Press' },
+  'Wall Sit':               { knee: 'Glute Bridge' },
   'Barbell Curl':           { elbow: 'Hammer Curl', wrist: 'Hammer Curl' },
   'Bicep Curl':             { elbow: 'Hammer Curl' },
   'Concentration Curl':     { elbow: 'Hammer Curl' },
