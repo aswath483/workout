@@ -22,6 +22,7 @@ interface Props {
   swappedFor?: PainArea;
   originalName?: string;
   caution?: PainArea;
+  cautionReason?: 'unknown' | 'duplicate';
   equipmentSwap?: boolean;
   equipmentCaution?: boolean;
   defaultExpanded?: boolean;
@@ -48,7 +49,7 @@ function painAreaLabel(area: PainArea): string {
   return PAIN_AREAS.find((a) => a.id === area)?.label ?? area;
 }
 
-export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, equipmentSwap, equipmentCaution, defaultExpanded, manualSwap, swapAvailable, onSwap }: Props) {
+export default function ExerciseCard({ exercise, phase, sessionKey, exerciseIndex, checked, onCheckedChange, restMultiplier, level, profileId, onRemove, swappedFor, originalName, caution, cautionReason, equipmentSwap, equipmentCaution, defaultExpanded, manualSwap, swapAvailable, onSwap }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
   const [setsDone, setSetsDone] = useState<boolean[]>(() => Array(exercise.sets).fill(false));
   const [showTimer, setShowTimer] = useState(false);
@@ -125,7 +126,14 @@ export default function ExerciseCard({ exercise, phase, sessionKey, exerciseInde
                   </span>
                 )}
                 {caution && !swappedFor && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]" title="No safe swap known yet for this combination — go easy or skip it.">
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#713f12]/40 text-[#facc15]"
+                    title={
+                      cautionReason === 'duplicate'
+                        ? 'A safe swap exists for this, but it\'s already used for another exercise in today\'s session — go easy or skip it.'
+                        : 'No safe swap known yet for this combination — go easy or skip it.'
+                    }
+                  >
                     ⚠️ Caution · {painAreaLabel(caution)}
                   </span>
                 )}

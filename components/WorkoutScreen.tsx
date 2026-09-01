@@ -110,6 +110,7 @@ interface CombinedAdapted {
   swappedFor?: PainArea;
   originalName?: string;
   caution?: PainArea;
+  cautionReason?: 'unknown' | 'duplicate';
   equipmentSwap?: boolean;
   equipmentCaution?: boolean;
   manualSwap?: boolean;
@@ -162,6 +163,7 @@ function combineAdaptations(exercises: ExerciseInfo[], ownedEquipment: Equipment
       exercise: pain.exercise,
       swappedFor: pain.swappedFor,
       caution: pain.caution,
+      cautionReason: pain.cautionReason,
       equipmentSwap: eq.swapped,
       equipmentCaution: eq.caution,
       originalName: anySwap ? raw.name : undefined,
@@ -747,6 +749,7 @@ function SessionDetail({
                   swappedFor={adapted.swappedFor}
                   originalName={adapted.originalName}
                   caution={adapted.caution}
+                  cautionReason={adapted.cautionReason}
                   equipmentSwap={adapted.equipmentSwap}
                   equipmentCaution={adapted.equipmentCaution}
                   manualSwap={adapted.manualSwap}
@@ -774,6 +777,7 @@ function SessionDetail({
                       swappedFor={adapted.swappedFor}
                       originalName={adapted.originalName}
                       caution={adapted.caution}
+                      cautionReason={adapted.cautionReason}
                       equipmentSwap={adapted.equipmentSwap}
                       equipmentCaution={adapted.equipmentCaution}
                       phase={session.phase}
