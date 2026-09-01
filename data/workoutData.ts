@@ -604,8 +604,14 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
 // different movement. No entry for a given area means no safe swap is known yet, so
 // the original stays in place with a caution badge instead of silently vanishing.
 export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, string>>>> = {
+  // Goblet Squat gets a different knee-safe target (Hip Thrust) than the hinge-pattern
+  // exercises below (Glute Bridge) specifically because it shares a day with Deadlift
+  // every phase (Friday) — without this they'd both swap to Glute Bridge. Barbell Squat
+  // stays on Glute Bridge: it never shares a day with the deadlift family, and switching
+  // it to Hip Thrust would instead collide with Monday's Lunges/Bulgarian Split Squat,
+  // which are already mapped there.
   'Barbell Squat':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
-  'Goblet Squat':           { knee: 'Glute Bridge' },
+  'Goblet Squat':           { knee: 'Hip Thrust' },
   'Sumo Deadlift':          { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
   'Dumbbell Deadlift':      { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
   'Romanian Deadlift':      { knee: 'Glute Bridge', lower_back: 'Glute Bridge' },
