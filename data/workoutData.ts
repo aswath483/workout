@@ -179,6 +179,11 @@ export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
   'Medicine Ball Russian Twist':    ['Medicine ball'],
   'Medicine Ball Slam':             ['Medicine ball'],
   'Medicine Ball Squat to Press':   ['Medicine ball'],
+  // Gym/stability ball
+  'Stability Ball Hamstring Curl':  ['Gym ball'],
+  'Stability Ball Plank':           ['Gym ball'],
+  'Stability Ball Russian Twist':   ['Gym ball'],
+  'Stability Ball Wall Squat':      ['Gym ball'],
 };
 
 export const EZ_BAR_ALTERNATIVE: Record<string, string> = {
@@ -296,6 +301,23 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Chest', 'Triceps', 'Shoulders'], muscleGroup: 'push',
     howTo: ['Stand facing a solid wall about 3–4 feet away, holding the ball at your chest', 'Push the ball explosively into the wall like a basketball chest pass', 'Catch it on the rebound and pass again right away', 'Keep your core braced throughout'],
     tip: 'No solid wall to use? Do slow, controlled presses out and back instead of throws.', youtubeQuery: 'medicine ball chest pass wall throw proper form' },
+  // ── GYM/STABILITY BALL ───────────────────────────────────────────────────
+  { name: 'Stability Ball Hamstring Curl', weight: 'Bodyweight', sets: 3, reps: '12–15', restSeconds: 60,
+    muscles: ['Hamstrings', 'Glutes', 'Core'], muscleGroup: 'legs',
+    howTo: ['Lie on your back, heels on top of the ball, arms flat at your sides', 'Raise your hips off the floor into a bridge', 'Keeping hips up, roll the ball toward your glutes by bending your knees', 'Roll it back out to straight legs, then lower hips down'],
+    tip: 'Minimal knee loading — a good hamstring option when squats or lunges are off the table.', youtubeQuery: 'stability ball hamstring curl proper form' },
+  { name: 'Stability Ball Plank', weight: 'Bodyweight', sets: 3, reps: '30–45 sec', restSeconds: 45,
+    muscles: ['Core', 'Shoulders'], muscleGroup: 'core',
+    howTo: ['Rest your forearms on top of the ball, elbows under shoulders', 'Walk feet back until body forms a straight line head to heels', 'Brace your core hard — the ball wants to roll, don\'t let it', 'Breathe steadily, keep hips level'],
+    tip: 'The instability makes this harder than a floor plank at the same time — start shorter than you think.', youtubeQuery: 'stability ball plank proper form core' },
+  { name: 'Stability Ball Russian Twist', weight: '3–5 kg (dumbbell or plate)', sets: 3, reps: '16 each side', restSeconds: 60,
+    muscles: ['Obliques', 'Core'], muscleGroup: 'core',
+    howTo: ['Lie back on the ball so it supports your shoulders and mid-back, knees bent, feet flat', 'Hold the weight with both hands, arms extended above your chest', 'Rotate your torso to lower the weight toward one hip, then the other', 'Keep hips level — the rotation comes from your core, not your arms'],
+    tip: 'A direct swap for Medicine Ball Russian Twist if you\'ve got a stability ball instead.', youtubeQuery: 'stability ball russian twist proper form' },
+  { name: 'Stability Ball Wall Squat', weight: '5–10 kg (dumbbells, optional)', sets: 3, reps: '15', restSeconds: 90,
+    muscles: ['Quads', 'Glutes', 'Core'], muscleGroup: 'legs',
+    howTo: ['Place the ball between your lower back and a wall', 'Feet shoulder-width, out far enough that knees track over ankles at the bottom', 'Squat down, letting the ball roll up your back, until thighs are near parallel', 'Drive through your heels back up to standing'],
+    tip: 'The wall and ball do the balance work for you — good for grooving squat depth.', youtubeQuery: 'stability ball wall squat proper form' },
   // ── PULL ─────────────────────────────────────────────────────────────────
   { name: 'Bent Over Row', weight: '15 kg', sets: 4, reps: '10', restSeconds: 120,
     muscles: ['Back (Lats)', 'Rhomboids', 'Biceps'], muscleGroup: 'pull',
@@ -645,6 +667,11 @@ export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, s
   'Barbell Curl':           { elbow: 'Hammer Curl', wrist: 'Hammer Curl' },
   'Bicep Curl':             { elbow: 'Hammer Curl' },
   'Hammer Curl':            { elbow: 'Band Bicep Curl' },
+  // Band Bicep Curl is already the gentlest curl in the family (the fallback target for
+  // all the others) — if it's the one straining the elbow, dropping the curling motion
+  // entirely for a grip/forearm isometric hold is safer than a "lighter curl" that
+  // doesn't exist. Farmer Walk is already a vetted-safe pick elsewhere in this table.
+  'Band Bicep Curl':        { elbow: 'Farmer Walk' },
   'Concentration Curl':     { elbow: 'Hammer Curl' },
   'Triceps Extension':      { elbow: 'Band Triceps Pushdown' },
   'Skull Crusher':          { elbow: 'Band Triceps Pushdown' },
@@ -705,7 +732,7 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
 // original assumption — someone with less gear (e.g. just a resistance band)
 // unchecks what they don't have in their own profile's settings.
 
-export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band' | 'medicine_ball';
+export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band' | 'medicine_ball' | 'gym_ball';
 
 export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string }[] = [
   { id: 'dumbbells', label: 'Dumbbells' },
@@ -713,6 +740,7 @@ export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string }[] = [
   { id: 'ez_bar', label: 'EZ/Curl Bar' },
   { id: 'resistance_band', label: 'Resistance Band' },
   { id: 'medicine_ball', label: 'Medicine Ball' },
+  { id: 'gym_ball', label: 'Gym/Stability Ball' },
 ];
 
 export const ALL_EQUIPMENT: EquipmentItem[] = EQUIPMENT_ITEMS.map((e) => e.id);
@@ -725,6 +753,7 @@ function tagToEquipment(tag: string): EquipmentItem | 'bodyweight' | null {
   if (tag.startsWith('EZ')) return 'ez_bar';
   if (tag === 'Dumbbells') return 'dumbbells';
   if (tag === 'Medicine ball') return 'medicine_ball';
+  if (tag === 'Gym ball') return 'gym_ball';
   if (tag === 'Bodyweight') return 'bodyweight';
   return null;
 }
@@ -774,6 +803,7 @@ export const EQUIPMENT_ALTERNATIVE: Partial<Record<string, string>> = {
   'Barbell Curl':           'Band Bicep Curl',
   'Rear Delt Fly':          'Band Pull-Apart',
   'Shrugs':                 'Band Shrugs',
+  'Medicine Ball Russian Twist': 'Stability Ball Russian Twist',
   'Romanian Deadlift':      'Single-Leg Romanian Deadlift',
   'Good Morning':           'Single-Leg Romanian Deadlift',
   'Deadlift':               'Band Deadlift',

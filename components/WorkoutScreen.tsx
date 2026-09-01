@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import {
   SESSIONS, PHASES, EXERCISE_LIBRARY, PAIN_AREAS, EQUIPMENT_ITEMS,
-  EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, canDoExercise, exerciseEquipmentTypes,
+  EXERCISE_VARIANTS, EXERCISE_STRAIN_AREAS, SAFE_ALTERNATIVE, canDoExercise, exerciseEquipmentTypes,
   type ExerciseInfo, type PainArea, type EquipmentItem, type HIITDay,
 } from '@/data/workoutData';
 import ExerciseCard from './ExerciseCard';
@@ -119,9 +119,19 @@ interface CombinedAdapted {
 // Same-muscle, comparable-intensity alternatives for a given (already equipment/pain
 // adapted) exercise name — reuses the curated weekly-variation pool so a personal "I'm
 // bored of this" swap can never be less effective or reintroduce gear/pain conflicts.
+// Also folds in the pain-specific SAFE_ALTERNATIVE targets for any currently active
+// area this exercise strains — this is what surfaces a real, pickable option on a slot
+// that got a caution badge instead of an automatic swap (e.g. because the usual target
+// was already claimed by another exercise the same day; see adaptExercisesForPain).
 function getSwapOptions(name: string, ownedEquipment: EquipmentItem[], activePainAreas: PainArea[]): string[] {
   const variants = EXERCISE_VARIANTS[name] ?? [];
-  return variants.filter((v) => {
+  const painSafeTargets = (EXERCISE_STRAIN_AREAS[name] ?? [])
+    .filter((area) => activePainAreas.includes(area))
+    .map((area) => SAFE_ALTERNATIVE[name]?.[area])
+    .filter((v): v is string => !!v);
+  const candidates = Array.from(new Set([...variants, ...painSafeTargets]));
+  return candidates.filter((v) => {
+    if (v === name) return false;
     if (!canDoExercise(v, ownedEquipment)) return false;
     const strains = EXERCISE_STRAIN_AREAS[v];
     if (strains?.some((a) => activePainAreas.includes(a))) return false;
