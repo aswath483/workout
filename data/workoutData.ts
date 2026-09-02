@@ -724,6 +724,22 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   'Mountain Climbers':  ['High Knees', 'Bear Crawl'],
   'Pushup Finisher':    ['Diamond Push-up', 'Pike Push-up'],
   'Burpees Finisher':   ['Mountain Climbers', 'High Knees'],
+  // The pain-safe "landing" exercises below (SAFE_ALTERNATIVE's targets) had no
+  // variants of their own — once auto-swapped into Glute Bridge for knee pain, say,
+  // there was no further Swap option if you didn't want that specific exercise. None
+  // of these are ever a *scheduled* Mon/Wed/Fri exercise themselves (only reached via
+  // a pain swap or a manual pick), except Farmer Walk — which stays deliberately
+  // absent as a key here, only as a value, so this doesn't also change its own
+  // weekly rotation on the Fridays where it's the actual scheduled exercise.
+  'Glute Bridge':       ['Hip Thrust', 'Farmer Walk'],
+  'Hip Thrust':         ['Glute Bridge', 'Farmer Walk'],
+  'Pallof Press':       ['Dead Bug', 'Bird Dog'],
+  'Dead Bug':           ['Pallof Press', 'Bird Dog'],
+  'Bird Dog':           ['Pallof Press', 'Dead Bug'],
+  'Face Pull':          ['Scapular Push-up', 'Band Chest Press'],
+  'Scapular Push-up':   ['Face Pull', 'Band Chest Press'],
+  'Band Chest Press':   ['Face Pull', 'Scapular Push-up'],
+  'Band Triceps Pushdown': ['Farmer Walk'],
 };
 
 // ─── EQUIPMENT-AWARE ADAPTATION ──────────────────────────────────────────────
