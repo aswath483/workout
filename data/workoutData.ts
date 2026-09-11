@@ -713,12 +713,13 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   'Lateral Raise':      ['Dumbbell Front Raise', 'Rear Delt Fly'],
   'Rear Delt Fly':      ['Band Pull-Apart', 'Face Pull'],
   'Triceps Extension':  ['Skull Crusher', 'Band Triceps Pushdown'],
-  // Leg Raises/Russian Twist only ever live on Monday now (see the Mon/Wed/Fri
-  // rearrangement below) — no RDL or Deadlift that day, so it's safe to rotate
-  // through the dynamic/weighted ab moves here without ever landing on Wed or Fri.
-  'Leg Raises':         ['Russian Twist', 'Mountain Climbers', 'High Knees'],
-  'Russian Twist':      ['Leg Raises', 'Mountain Climbers', 'High Knees'],
-  'Plank':              ['Side Plank', 'Dead Bug', 'Pallof Press', 'Bird Dog'],
+  // Monday now runs 4 ab exercises (Plank, Leg Raises, Russian Twist, Bird Dog — all
+  // scheduled below), 2 sets each — no RDL or Deadlift that day, so it's the one day
+  // safe for real ab volume. Their variant pools are deliberately kept disjoint from
+  // each other (and from Plank, which has none) so no two of Monday's 4 slots can
+  // ever land on the same exercise in the same week.
+  'Leg Raises':         ['Mountain Climbers', 'High Knees'],
+  'Russian Twist':      ['Superman'],
   'Shrugs':             ['Band Shrugs'],
   'Hammer Curl':        ['Concentration Curl', 'Band Bicep Curl'],
   'Concentration Curl': ['Hammer Curl', 'Band Bicep Curl'],
@@ -732,18 +733,22 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   // there was no further Swap option if you didn't want that specific exercise.
   // Farmer Walk stays deliberately absent as a key here, only as a value, so this
   // doesn't also change its own weekly rotation on the Fridays where it's the actual
-  // scheduled exercise. Dead Bug and Side Plank are the exception the other way —
-  // they're now deliberately *made* into real scheduled Wed/Fri exercises below
-  // (spine-neutral, safe right after heavy hinge work), so this pool doubles as
-  // their weekly rotation too. Every exercise in this family is anti-extension/
-  // anti-rotation — none of them load the spine — so it's safe to keep it a closed
+  // scheduled exercise. Dead Bug, Bird Dog and Side Plank are the exception the other
+  // way — they're now deliberately *made* into real scheduled exercises below
+  // (Wed/Monday's 4th slot/Fri respectively, all spine-neutral and safe right after
+  // heavy hinge work), so this pool doubles as their weekly rotation too. All four
+  // are one consistent 4-step rotation (Dead Bug -> Pallof Press -> Bird Dog -> Side
+  // Plank -> loops) just started from a different point each — Wed starts at Dead
+  // Bug, Monday's 4th slot at Bird Dog, Friday at Side Plank — so with 3 distinct
+  // starting points on a 4-cycle, those three days can never show the same exercise
+  // in the same week. None of them load the spine, so it's also safe to keep this
   // loop with no cross-link to the weighted/dynamic ab pool above.
   'Glute Bridge':       ['Hip Thrust', 'Farmer Walk'],
   'Hip Thrust':         ['Glute Bridge', 'Farmer Walk'],
-  'Pallof Press':       ['Dead Bug', 'Bird Dog', 'Side Plank'],
+  'Pallof Press':       ['Bird Dog', 'Side Plank', 'Dead Bug'],
   'Dead Bug':           ['Pallof Press', 'Bird Dog', 'Side Plank'],
-  'Bird Dog':           ['Pallof Press', 'Dead Bug', 'Side Plank'],
-  'Side Plank':         ['Pallof Press', 'Bird Dog', 'Dead Bug'],
+  'Bird Dog':           ['Side Plank', 'Dead Bug', 'Pallof Press'],
+  'Side Plank':         ['Dead Bug', 'Pallof Press', 'Bird Dog'],
   'Face Pull':          ['Scapular Push-up', 'Band Chest Press'],
   'Scapular Push-up':   ['Face Pull', 'Band Chest Press'],
   'Band Chest Press':   ['Face Pull', 'Scapular Push-up'],
@@ -925,7 +930,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Plank',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '30–45 sec',
         restSeconds: 45,
         muscles: ['Core', 'Shoulders', 'Glutes'],
@@ -943,7 +948,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Leg Raises',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '10–15',
         restSeconds: 45,
         muscles: ['Lower Abs', 'Hip Flexors'],
@@ -957,6 +962,41 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
         ],
         tip: 'Your proper abs day — Monday has no heavy hip-hinge before it, so it\'s the safest day for this. Wed and Fri get gentler core work instead, right after Deadlift/RDL.',
         youtubeQuery: 'leg raises proper form lower abs beginners',
+      },
+      {
+        name: 'Russian Twist',
+        weight: '5 kg plate',
+        sets: 2,
+        reps: '20 total (10 each side)',
+        restSeconds: 45,
+        muscles: ['Obliques', 'Core'],
+        muscleGroup: 'core',
+        howTo: [
+          'Sit on the floor, knees bent, lean back about 45°',
+          'Hold the weight at your chest with both hands',
+          'Lift feet slightly off the floor (or keep them down if too hard)',
+          'Rotate your torso to the right, then to the left — that is 1 rep each side',
+          'Move from your core, not just your arms',
+        ],
+        tip: 'Third ab exercise of the day — 2 quick sets, obliques get their own dedicated work here instead of being squeezed in on a heavy day.',
+        youtubeQuery: 'russian twist proper form obliques',
+      },
+      {
+        name: 'Bird Dog',
+        weight: 'Bodyweight',
+        sets: 2,
+        reps: '10 each side',
+        restSeconds: 45,
+        muscles: ['Core', 'Glutes', 'Lower Back'],
+        muscleGroup: 'core',
+        howTo: [
+          'Start on hands and knees, back flat, core braced',
+          'Extend one arm straight forward and the opposite leg straight back',
+          'Hold for a second, keeping hips and shoulders square to the floor',
+          'Return to start with control and switch sides',
+        ],
+        tip: 'Fourth and last ab exercise — anti-rotation work to round out the day. 4 exercises, 2 sets each: a proper abs day without eating your whole session.',
+        youtubeQuery: 'bird dog exercise proper form core stability',
       },
       {
         name: 'Band Bicep Curl',
@@ -1321,7 +1361,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Plank',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '45–60 sec',
         restSeconds: 45,
         muscles: ['Core', 'Shoulders', 'Glutes'],
@@ -1337,7 +1377,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Leg Raises',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '12–15',
         restSeconds: 45,
         muscles: ['Lower Abs', 'Hip Flexors'],
@@ -1349,6 +1389,39 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
         ],
         tip: 'Your proper abs day — Monday has no heavy hip-hinge before it, so it\'s the safest day for this. Wed and Fri get gentler core work instead, right after Deadlift/RDL.',
         youtubeQuery: 'leg raises proper form lower abs beginners',
+      },
+      {
+        name: 'Russian Twist',
+        weight: '7.5 kg',
+        sets: 2,
+        reps: '20 total',
+        restSeconds: 45,
+        muscles: ['Obliques', 'Core'],
+        muscleGroup: 'core',
+        howTo: [
+          'Same as Phase 1 — heavier weight now',
+          'Feet should be off the floor if possible',
+          'Rotate from your torso, not just your arms',
+          'Touch the weight to the floor on each side for full range',
+        ],
+        tip: 'Third ab exercise of the day — 2 quick sets, obliques get their own dedicated work here instead of being squeezed in on a heavy day.',
+        youtubeQuery: 'russian twist proper form obliques',
+      },
+      {
+        name: 'Bird Dog',
+        weight: 'Bodyweight',
+        sets: 2,
+        reps: '12 each side',
+        restSeconds: 45,
+        muscles: ['Core', 'Glutes', 'Lower Back'],
+        muscleGroup: 'core',
+        howTo: [
+          'Same as Phase 1 — now 12 reps each side',
+          'Hips and shoulders stay square to the floor the whole time',
+          'Hold the extended position a beat longer than Phase 1 before switching sides',
+        ],
+        tip: 'Fourth and last ab exercise — anti-rotation work to round out the day. 4 exercises, 2 sets each: a proper abs day without eating your whole session.',
+        youtubeQuery: 'bird dog exercise proper form core stability',
       },
       {
         name: 'Band Bicep Curl',
@@ -1774,7 +1847,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Plank',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '60–90 sec',
         restSeconds: 45,
         muscles: ['Core', 'Shoulders', 'Glutes'],
@@ -1790,7 +1863,7 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
       {
         name: 'Leg Raises',
         weight: 'Bodyweight',
-        sets: 3,
+        sets: 2,
         reps: '15',
         restSeconds: 45,
         muscles: ['Lower Abs', 'Hip Flexors'],
@@ -1803,6 +1876,39 @@ export const PHASES: Record<1 | 2 | 3, PhaseData> = {
         ],
         tip: 'Your proper abs day — Monday has no heavy hip-hinge before it, so it\'s the safest day for this. Wed and Fri get gentler core work instead, right after Deadlift/RDL.',
         youtubeQuery: 'leg raises proper form lower abs beginners',
+      },
+      {
+        name: 'Russian Twist',
+        weight: '10 kg',
+        sets: 2,
+        reps: '20 total',
+        restSeconds: 45,
+        muscles: ['Obliques', 'Core'],
+        muscleGroup: 'core',
+        howTo: [
+          'Same rotation — 10 kg now',
+          'Feet off the floor every set',
+          'Slow and controlled — feel your obliques on each rotation',
+          'Touch weight to floor on each side for full range',
+        ],
+        tip: 'Third ab exercise of the day — 2 quick sets, obliques get their own dedicated work here instead of being squeezed in on a heavy day.',
+        youtubeQuery: 'russian twist proper form obliques',
+      },
+      {
+        name: 'Bird Dog',
+        weight: 'Bodyweight',
+        sets: 2,
+        reps: '15 each side',
+        restSeconds: 45,
+        muscles: ['Core', 'Glutes', 'Lower Back'],
+        muscleGroup: 'core',
+        howTo: [
+          'Same as Phases 1 and 2 — now 15 reps each side',
+          'By now this should be smooth and controlled, not shaky',
+          'Hold the extended position a full second before switching sides',
+        ],
+        tip: 'Fourth and last ab exercise — anti-rotation work to round out the day. 4 exercises, 2 sets each: a proper abs day without eating your whole session.',
+        youtubeQuery: 'bird dog exercise proper form core stability',
       },
       {
         name: 'Band Bicep Curl',
