@@ -704,7 +704,14 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
   'Walking Lunge':      ['Lunges', 'Bulgarian Split Squat'],
   'Shoulder Press':     ['Arnold Press', 'Barbell Overhead Press'],
   'Push Press':         ['Barbell Overhead Press', 'Arnold Press'],
-  'Floor Press':        ['Incline Dumbbell Press', 'Dumbbell Chest Fly'],
+  // Incline Dumbbell Press deliberately left out of Floor Press's rotation — it's the
+  // one exercise in the whole program that genuinely needs a real incline (a flat
+  // chair can't substitute), so it shouldn't show up automatically via weekly
+  // rotation or the Swap button. It stays fully in the exercise library, so it's
+  // still there to add yourself from "Add an Exercise" if you've rigged up an
+  // incline (stairs, propped board, pillow stack) and want to use it — just never
+  // the default.
+  'Floor Press':        ['Dumbbell Chest Fly'],
   'Bent Over Row':      ['Barbell Row', 'Single-Arm Dumbbell Row'],
   'Barbell Row':        ['Bent Over Row', 'Single-Arm Dumbbell Row'],
   'Romanian Deadlift':  ['Deadlift', 'Sumo Deadlift'],
