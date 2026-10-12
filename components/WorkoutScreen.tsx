@@ -13,6 +13,7 @@ import { adaptExercisesForPain } from '@/lib/painAdaptation';
 import { adaptExercisesForEquipment } from '@/lib/equipmentAdaptation';
 import { applyWeeklyVariation, applyDeload, isDeloadWeek } from '@/lib/weeklyVariation';
 import { getFinisherExercises, applyNewToTraining } from '@/lib/goalAdaptation';
+import { applyPullupBarReplacement, getPullupBarExtras } from '@/lib/pullupBar';
 import { adaptHiitExercises } from '@/lib/hiitAdaptation';
 import { logPainOccurrences } from '@/lib/painHistory';
 
@@ -377,7 +378,9 @@ function SessionDetail({
   const isDone = completedSessions.includes(sessionNum);
   const sessionKey = `s${sessionNum}`;
   const customs = customExercises[sessionKey] ?? [];
-  const rawBaseExercises = Array.isArray(dayData) ? dayData : [];
+  const rawBaseExercises = applyPullupBarReplacement(
+    Array.isArray(dayData) ? dayData : [], session.phase, session.day, ownedEquipment
+  );
   const variedBaseExercises = applyWeeklyVariation(rawBaseExercises, session.weekInPhase);
 
   // "Feeling off today?" — a same-visit-only pain flag on top of the persistent
@@ -426,10 +429,15 @@ function SessionDetail({
     applyNewToTraining(combineAdaptations(customs, ownedEquipment, effectivePainAreas), session.phase, session.weekInPhase, newToTraining),
     session.weekInPhase
   );
+  const pullupBar = getPullupBarExtras(session.phase, session.day, ownedEquipment, effectivePainAreas);
+  const barExercises = applyDeload(
+    applyNewToTraining(combineAdaptations(pullupBar.exercises, ownedEquipment, effectivePainAreas), session.phase, session.weekInPhase, newToTraining),
+    session.weekInPhase
+  );
   const finisherExercises: CombinedAdapted[] = session.type === 'strength'
     ? getFinisherExercises(goal).map((exercise) => ({ exercise }))
     : [];
-  const allSessionExercises = [...baseExercises, ...adaptedCustoms, ...finisherExercises];
+  const allSessionExercises = [...barExercises, ...baseExercises, ...adaptedCustoms, ...finisherExercises];
 
   const [warmupDone, setWarmupDone] = useState<boolean[]>(() => Array(WARMUP_ITEMS.length).fill(false));
   const [warmupExpanded, setWarmupExpanded] = useState(true);
@@ -453,6 +461,7 @@ function SessionDetail({
   // Library: filter out exercises already in this session
   const sessionExNames = new Set(
     baseExercises.map(e => e.exercise.name)
+      .concat(barExercises.map(e => e.exercise.name))
       .concat(customs.map(e => e.name))
       .concat(finisherExercises.map(e => e.exercise.name))
   );
@@ -749,6 +758,41 @@ function SessionDetail({
                   Tap a set button when done — rest timer starts automatically.
                 </p>
               </div>
+
+              {barExercises.length > 0 && (
+                <>
+                  <p className="text-xs font-bold text-[#7dd3fc] uppercase tracking-widest mb-1">Pull-Up Bar · Do These First</p>
+                  <p className="text-[11px] text-[#888] mb-3 leading-relaxed">
+                    Bar high for hangs (arms straight, toes just touching the floor), waist height for Inverted Row. Step up from a chair — never jump or swing on a doorway bar, and check the lock before every session.
+                  </p>
+                  {barExercises.map((adapted, i) => (
+                    <ExerciseCard
+                      key={`bar-${i}-${adapted.exercise.name}`}
+                      exercise={adapted.exercise}
+                      swappedFor={adapted.swappedFor}
+                      originalName={adapted.originalName}
+                      caution={adapted.caution}
+                      cautionReason={adapted.cautionReason}
+                      equipmentSwap={adapted.equipmentSwap}
+                      equipmentCaution={adapted.equipmentCaution}
+                      phase={session.phase}
+                      sessionKey={`${sessionKey}-bar`}
+                      exerciseIndex={i}
+                      checked={checked}
+                      onCheckedChange={onCheckedChange}
+                      restMultiplier={restMultiplier}
+                      level={level}
+                      profileId={profileId}
+                      defaultExpanded={newToTraining}
+                    />
+                  ))}
+                </>
+              )}
+              {pullupBar.skippedForPain && (
+                <p className="text-[11px] text-[#f87171] mb-3 leading-relaxed">
+                  Today&apos;s light pull-up bar work is skipped because shoulder or elbow pain is on. While it&apos;s on, Wednesday and Friday step down to easier bar exercises.
+                </p>
+              )}
 
               <p className="text-xs font-bold text-[#888] uppercase tracking-widest mb-3">Exercises</p>
 

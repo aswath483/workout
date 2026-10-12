@@ -139,7 +139,13 @@ export const EQUIPMENT_BY_EXERCISE: Record<string, string[]> = {
   'Calf Raise':             ['Bodyweight'],
   'Box Jump':               ['Bodyweight'],
   'Dips':                   ['Bodyweight'],
-  'Pull-Ups':               ['Bodyweight', 'Resistance band (assisted)'],
+  // Pull-up bar (doorway / grip-lock bar)
+  'Pull-Ups':               ['Pull-up bar'],
+  'Dead Hang':              ['Pull-up bar'],
+  'Scapular Pull-Up':       ['Pull-up bar'],
+  'Inverted Row':           ['Pull-up bar'],
+  'Negative Pull-Up':       ['Pull-up bar'],
+  'Band-Assisted Pull-Up':  ['Pull-up bar', 'Resistance band'],
   'Burpees':                ['Bodyweight'],
   'Burpees Finisher':       ['Bodyweight'],
   'Scapular Push-up':       ['Bodyweight'],
@@ -323,10 +329,31 @@ export const EXERCISE_LIBRARY: ExerciseInfo[] = [
     muscles: ['Back (Lats)', 'Rhomboids', 'Biceps'], muscleGroup: 'pull',
     howTo: ['Feet hip-width, hinge forward 45° — back flat', 'Pull bar to lower chest/belly button', 'Lead with elbows — squeeze shoulder blades at top', 'Lower slowly with control'],
     tip: 'Imagine cracking a walnut between shoulder blades at the top.', youtubeQuery: 'barbell bent over row proper form beginners' },
-  { name: 'Pull-Ups', weight: 'Bodyweight', sets: 3, reps: 'Max (4–10)', restSeconds: 120,
+  { name: 'Pull-Ups', weight: 'Bodyweight (pull-up bar)', sets: 3, reps: 'Max (start with 1–3)', restSeconds: 120,
     muscles: ['Lats', 'Biceps', 'Upper Back'], muscleGroup: 'pull',
     howTo: ['Overhand grip slightly wider than shoulders', 'Pull chest toward bar — elbows pull down and back', 'Chin clears bar at top', 'Lower to full hang — arms straight at bottom'],
-    tip: 'Can\'t do one? Do "negatives" — jump to top, lower as slowly as possible.', youtubeQuery: 'pull ups proper form beginners lat activation' },
+    tip: 'Can\'t do one yet? Work through Dead Hang → Scapular Pull-Up → Inverted Row → Negative Pull-Up → Band-Assisted Pull-Up first. On a doorway bar, step up from a chair — never jump or swing.', youtubeQuery: 'pull ups proper form beginners lat activation' },
+  // Beginner pull-up progression — all on a pull-up bar (see PULLUP_BAR_PLAN below)
+  { name: 'Dead Hang', weight: 'Bodyweight (pull-up bar)', sets: 3, reps: '20–30 sec', restSeconds: 60,
+    muscles: ['Grip / Forearms', 'Lats', 'Shoulders'], muscleGroup: 'pull',
+    howTo: ['Set the bar high enough that your toes just touch or clear the floor with arms straight', 'Step up from a sturdy chair and grab the bar overhand, hands just wider than shoulders', 'Lift your feet and hang — pull your shoulders slightly down, away from your ears', 'Stay still and breathe steadily — no swinging', 'Step back onto the chair to finish instead of dropping'],
+    tip: 'Grip is usually what gives out first. Build up to a 60-second hang and your first pull-up gets much closer.', youtubeQuery: 'dead hang pull up bar beginners proper form' },
+  { name: 'Scapular Pull-Up', weight: 'Bodyweight (pull-up bar)', sets: 3, reps: '8', restSeconds: 60,
+    muscles: ['Lower Traps', 'Lats', 'Shoulder Blades'], muscleGroup: 'pull',
+    howTo: ['Hang from the bar with arms fully straight', 'Without bending your elbows, pull your shoulder blades down and back — your body rises a few centimetres', 'Hold the top for 1–2 seconds', 'Lower slowly back to a relaxed hang'],
+    tip: 'This is the very first part of every pull-up. Arms stay straight the whole time — it is a small movement.', youtubeQuery: 'scapular pull ups proper form beginners' },
+  { name: 'Inverted Row', weight: 'Bodyweight (bar at waist height)', sets: 3, reps: '8–12', restSeconds: 75,
+    muscles: ['Lats', 'Upper Back', 'Biceps'], muscleGroup: 'pull',
+    howTo: ['Set the bar at about waist height', 'Lie under it and grab it overhand, hands just wider than shoulders', 'Heels on the floor, body straight from head to heels — squeeze your glutes', 'Pull your chest up to the bar, squeezing your shoulder blades together', 'Lower slowly back to straight arms'],
+    tip: 'Bend your knees to make it easier, straighten your legs to make it harder. 3 × 12 with straight legs means you are ready for negatives.', youtubeQuery: 'inverted row proper form beginners at home' },
+  { name: 'Negative Pull-Up', weight: 'Bodyweight (pull-up bar + chair)', sets: 3, reps: '3–5 (3–5 sec down)', restSeconds: 120,
+    muscles: ['Lats', 'Biceps', 'Upper Back'], muscleGroup: 'pull',
+    howTo: ['Place a sturdy chair under the bar', 'Step up until your chin is over the bar, gripping overhand — don\'t jump', 'Take your feet off the chair and hold the top for a moment', 'Lower yourself as slowly as you can — aim for 3–5 seconds — until your arms are fully straight', 'Step back onto the chair and repeat'],
+    tip: 'The fastest route to your first pull-up. End the set as soon as you can no longer control the way down.', youtubeQuery: 'negative pull ups beginners how to' },
+  { name: 'Band-Assisted Pull-Up', weight: 'Resistance band (looped over bar)', sets: 3, reps: '5–8', restSeconds: 120,
+    muscles: ['Lats', 'Biceps', 'Upper Back'], muscleGroup: 'pull',
+    howTo: ['Loop a resistance band over the bar and pull one end through the other to lock it', 'Step up from a chair and put one knee (or foot) in the band', 'Hang with straight arms, grip just wider than shoulders', 'Pull your chest toward the bar until your chin clears it', 'Lower slowly back to straight arms'],
+    tip: 'A lighter band gives less help. When 3 × 8 feels easy, use a lighter band or swap a set for full pull-up attempts.', youtubeQuery: 'resistance band assisted pull ups beginners' },
   { name: 'Face Pull', weight: '5–7.5 kg', sets: 3, reps: '15–20', restSeconds: 60,
     muscles: ['Rear Delts', 'Rotator Cuff', 'Upper Traps'], muscleGroup: 'pull',
     howTo: ['Cable or resistance band at face height', 'Pull toward face, elbows high and flared out', 'Rotate wrists so hands end near ears at full contraction', 'Return slowly and controlled'],
@@ -595,6 +622,10 @@ export const EXERCISE_STRAIN_AREAS: Partial<Record<string, PainArea[]>> = {
   'Lateral Raise':        ['shoulder'],
   'Dips':                 ['shoulder', 'elbow'],
   'Pull-Ups':             ['shoulder', 'elbow'],
+  'Dead Hang':            ['shoulder'],
+  'Scapular Pull-Up':     ['shoulder'],
+  'Negative Pull-Up':     ['shoulder', 'elbow'],
+  'Band-Assisted Pull-Up':['shoulder', 'elbow'],
   'Push Press':           ['shoulder', 'knee'],
   'Wall Sit':             ['knee'],
   'Barbell Curl':         ['elbow', 'wrist'],
@@ -662,6 +693,12 @@ export const SAFE_ALTERNATIVE: Partial<Record<string, Partial<Record<PainArea, s
   'Lateral Raise':          { shoulder: 'Face Pull' },
   'Dips':                   { shoulder: 'Floor Press', elbow: 'Band Triceps Pushdown' },
   'Pull-Ups':               { shoulder: 'Single-Arm Dumbbell Row', elbow: 'Single-Arm Dumbbell Row' },
+  // The pull-up progression steps back down to Inverted Row (feet on the floor, no
+  // strain areas of its own) — same bar, easier version — rather than leaving the bar.
+  'Dead Hang':              { shoulder: 'Farmer Walk' },
+  'Scapular Pull-Up':       { shoulder: 'Band Pull-Apart' },
+  'Negative Pull-Up':       { shoulder: 'Inverted Row', elbow: 'Inverted Row' },
+  'Band-Assisted Pull-Up':  { shoulder: 'Inverted Row', elbow: 'Inverted Row' },
   'Push Press':             { shoulder: 'Floor Press', knee: 'Shoulder Press' },
   'Wall Sit':               { knee: 'Glute Bridge' },
   'Barbell Curl':           { elbow: 'Hammer Curl', wrist: 'Hammer Curl' },
@@ -768,18 +805,28 @@ export const EXERCISE_VARIANTS: Partial<Record<string, string[]>> = {
 // original assumption — someone with less gear (e.g. just a resistance band)
 // unchecks what they don't have in their own profile's settings.
 
-export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band' | 'medicine_ball' | 'gym_ball';
+export type EquipmentItem = 'dumbbells' | 'barbell' | 'ez_bar' | 'resistance_band' | 'medicine_ball' | 'gym_ball' | 'pullup_bar';
 
-export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string }[] = [
+export const EQUIPMENT_ITEMS: { id: EquipmentItem; label: string; hint?: string }[] = [
   { id: 'dumbbells', label: 'Dumbbells' },
   { id: 'barbell', label: 'Barbell (bar + plates)' },
   { id: 'ez_bar', label: 'EZ/Curl Bar' },
   { id: 'resistance_band', label: 'Resistance Band' },
   { id: 'medicine_ball', label: 'Medicine Ball' },
   { id: 'gym_ball', label: 'Gym/Stability Ball' },
+  { id: 'pullup_bar', label: 'Pull-up Bar', hint: 'Adds a beginner pull-up progression on Mon (light), Wed (main) and Fri.' },
 ];
 
 export const ALL_EQUIPMENT: EquipmentItem[] = EQUIPMENT_ITEMS.map((e) => e.id);
+
+// What a brand-new profile starts with. The pull-up bar is the one item left out:
+// owning it doesn't just swap exercises, it adds bar work to Mon/Wed/Fri, so it's
+// opt-in rather than assumed.
+export const DEFAULT_EQUIPMENT: EquipmentItem[] = ALL_EQUIPMENT.filter((e) => e !== 'pullup_bar');
+
+// Exercises whose listed gear is *all* required, not "any one of" — a band-assisted
+// pull-up needs the bar and the band together.
+const REQUIRES_ALL_EQUIPMENT = new Set(['Band-Assisted Pull-Up']);
 
 // Gloves and a skipping rope don't gate whether you *can* do an exercise, so they're
 // not mapped to anything — only equipment that actually provides the resistance does.
@@ -790,6 +837,7 @@ function tagToEquipment(tag: string): EquipmentItem | 'bodyweight' | null {
   if (tag === 'Dumbbells') return 'dumbbells';
   if (tag === 'Medicine ball') return 'medicine_ball';
   if (tag === 'Gym ball') return 'gym_ball';
+  if (tag === 'Pull-up bar') return 'pullup_bar';
   if (tag === 'Bodyweight') return 'bodyweight';
   return null;
 }
@@ -811,6 +859,7 @@ export function canDoExercise(exerciseName: string, owned: EquipmentItem[]): boo
   if (!tags || tags.length === 0) return true;
   const required = tags.map(tagToEquipment).filter((c): c is EquipmentItem | 'bodyweight' => c !== null);
   if (required.length === 0 || required.includes('bodyweight')) return true;
+  if (REQUIRES_ALL_EQUIPMENT.has(exerciseName)) return required.every((r) => owned.includes(r as EquipmentItem));
   return required.some((r) => owned.includes(r as EquipmentItem));
 }
 
@@ -854,6 +903,96 @@ export const EQUIPMENT_ALTERNATIVE: Partial<Record<string, string>> = {
   'Farmer Walk':            'Bear Crawl',
   'Hip Thrust':             'Glute Bridge',
   'Russian Twist':          'Pallof Press',
+  // Pull-up bar: no bar means a band row instead. Band-Assisted Pull-Up first falls
+  // back to negatives (bar but no band), then on to Band Row if there's no bar either.
+  'Pull-Ups':               'Band Row',
+  'Dead Hang':              'Band Pull-Apart',
+  'Scapular Pull-Up':       'Band Pull-Apart',
+  'Inverted Row':           'Band Row',
+  'Negative Pull-Up':       'Band Row',
+  'Band-Assisted Pull-Up':  'Negative Pull-Up',
+};
+
+// ─── PULL-UP BAR PROGRESSION ─────────────────────────────────────────────────
+// Only applies to a profile that owns a pull-up bar. A beginner who can't do a single
+// pull-up trains the bar 3 days a week — never on back-to-back days (Tue/Thu/Sat are
+// cardio/HIIT):
+//   Mon — light: a couple of easy sets, shown first, dropped entirely on a shoulder or
+//         elbow pain day.
+//   Wed — main bar day: extras shown first while fresh, plus one bar exercise taking
+//         over an accessory slot.
+//   Fri — one bar exercise in place of Barbell Row, so the session doesn't get longer.
+// `replace` swaps the named exercise in the program list at the same position (so
+// existing per-slot checkmarks stay aligned); `extras` are their own section.
+// Overrides tune sets/reps per day on top of the EXERCISE_LIBRARY entry.
+
+export interface PullupBarSlot {
+  name: string;
+  overrides?: Partial<Pick<ExerciseInfo, 'sets' | 'reps' | 'restSeconds' | 'tip'>>;
+}
+
+export interface PullupBarDayPlan {
+  light?: boolean;
+  extras?: PullupBarSlot[];
+  replace?: { from: string; to: PullupBarSlot };
+}
+
+export const PULLUP_BAR_PLAN: Record<1 | 2 | 3, Partial<Record<Day, PullupBarDayPlan>>> = {
+  1: {
+    Mon: {
+      light: true,
+      extras: [
+        { name: 'Dead Hang', overrides: { sets: 2, reps: '20–30 sec', tip: 'Light bar day — just grip practice. Stop each hang before you have to let go.' } },
+        { name: 'Scapular Pull-Up', overrides: { sets: 2, reps: '8' } },
+      ],
+    },
+    Wed: {
+      extras: [
+        { name: 'Dead Hang', overrides: { sets: 3, reps: '20–30 sec' } },
+        { name: 'Scapular Pull-Up', overrides: { sets: 3, reps: '8' } },
+      ],
+      replace: { from: 'Shrugs', to: { name: 'Inverted Row', overrides: { sets: 3, reps: '8–12' } } },
+    },
+    Fri: {
+      replace: { from: 'Barbell Row', to: { name: 'Inverted Row', overrides: { sets: 3, reps: '8–12' } } },
+    },
+  },
+  2: {
+    Mon: {
+      light: true,
+      extras: [
+        { name: 'Dead Hang', overrides: { sets: 2, reps: '30–45 sec', tip: 'Light bar day — just grip practice. Stop each hang before you have to let go.' } },
+        { name: 'Scapular Pull-Up', overrides: { sets: 2, reps: '10' } },
+      ],
+    },
+    Wed: {
+      extras: [
+        { name: 'Dead Hang', overrides: { sets: 3, reps: '30–45 sec' } },
+      ],
+      replace: { from: 'Rear Delt Fly', to: { name: 'Negative Pull-Up', overrides: { sets: 4, reps: '3–5 (3–5 sec down)' } } },
+    },
+    Fri: {
+      replace: { from: 'Barbell Row', to: { name: 'Negative Pull-Up', overrides: { sets: 3, reps: '3 (3–5 sec down)', tip: 'Lighter than Wednesday on purpose — 3 slow reps per set, then rest.' } } },
+    },
+  },
+  3: {
+    Mon: {
+      light: true,
+      extras: [
+        { name: 'Dead Hang', overrides: { sets: 2, reps: '45–60 sec', tip: 'Light bar day — just grip practice. Stop each hang before you have to let go.' } },
+        { name: 'Pull-Ups', overrides: { sets: 2, reps: '1 (single attempt)', restSeconds: 120, tip: 'Just one clean attempt per set — practice, not a max-out. Step up from a chair, never jump.' } },
+      ],
+    },
+    Wed: {
+      extras: [
+        { name: 'Pull-Ups', overrides: { sets: 3, reps: '1–3', tip: 'Done first while you are fresh. Can\'t get one yet? Do a slow negative instead for that set.' } },
+      ],
+      replace: { from: 'Rear Delt Fly', to: { name: 'Band-Assisted Pull-Up', overrides: { sets: 3, reps: '5–8' } } },
+    },
+    Fri: {
+      replace: { from: 'Barbell Row', to: { name: 'Band-Assisted Pull-Up', overrides: { sets: 3, reps: '5' } } },
+    },
+  },
 };
 
 export const PHASES: Record<1 | 2 | 3, PhaseData> = {

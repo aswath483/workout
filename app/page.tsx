@@ -4,7 +4,7 @@ import WorkoutScreen from '@/components/WorkoutScreen';
 import ProgressScreen from '@/components/ProgressScreen';
 import TipsScreen from '@/components/TipsScreen';
 import BottomNav from '@/components/BottomNav';
-import { PAIN_AREAS, EQUIPMENT_ITEMS, ALL_EQUIPMENT, type ExerciseInfo, type PainArea, type EquipmentItem } from '@/data/workoutData';
+import { PAIN_AREAS, EQUIPMENT_ITEMS, DEFAULT_EQUIPMENT, type ExerciseInfo, type PainArea, type EquipmentItem } from '@/data/workoutData';
 import { syncProfile } from '@/lib/cloudSync';
 import { PROFILES, isProfileId, profileKey, profileLabel, type ProfileId } from '@/lib/profiles';
 import { readLatestWeight } from '@/components/BodyWeightTracker';
@@ -112,7 +112,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
   const [streak, setStreak, streakLoaded] = useLocalStorage<StreakData>(profileId, 'streak', { count: 0, lastDate: '' });
   const [painAreas, setPainAreas, painAreasLoaded] = useLocalStorage<PainArea[]>(profileId, 'pain_areas', []);
   const [sessionDates, setSessionDates, sessionDatesLoaded] = useLocalStorage<Record<number, string>>(profileId, 'session_dates', {});
-  const [ownedEquipment, setOwnedEquipment, equipmentLoaded] = useLocalStorage<EquipmentItem[]>(profileId, 'equipment', ALL_EQUIPMENT);
+  const [ownedEquipment, setOwnedEquipment, equipmentLoaded] = useLocalStorage<EquipmentItem[]>(profileId, 'equipment', DEFAULT_EQUIPMENT);
   const [goal, setGoal, goalLoaded] = useLocalStorage<Goal>(profileId, 'goal', 'recomp');
   const [heightCm, setHeightCm, heightLoaded] = useLocalStorage<number | null>(profileId, 'height_cm', null);
   const [newToTraining, setNewToTraining, newToTrainingLoaded] = useLocalStorage<boolean>(profileId, 'new_to_training', false);
@@ -243,7 +243,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
               onClick={() => setShowEquipmentPicker(true)}
               title="Your equipment"
               className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 ${
-                ownedEquipment.length < ALL_EQUIPMENT.length ? 'bg-[#1e3a5f]/40 border border-[#7dd3fc]/40' : 'bg-[#2a2a2a]'
+                DEFAULT_EQUIPMENT.some((id) => !ownedEquipment.includes(id)) ? 'bg-[#1e3a5f]/40 border border-[#7dd3fc]/40' : 'bg-[#2a2a2a]'
               }`}
             >
               <span className="text-sm">🎒</span>
@@ -431,6 +431,7 @@ function WorkoutApp({ profileId, readOnly, viewerLabel, onSwitchProfile, onReset
                   >
                     <div className="flex-1">
                       <p className={`font-bold text-sm ${isActive ? 'text-[#7dd3fc]' : 'text-white'}`}>{item.label}</p>
+                      {item.hint && <p className="text-[11px] text-[#888] mt-0.5">{item.hint}</p>}
                     </div>
                     {isActive && <span className="text-[#7dd3fc] text-lg">✓</span>}
                   </button>
